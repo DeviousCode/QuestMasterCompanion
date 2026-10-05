@@ -7,15 +7,18 @@ local QMC = {
     objectiveState = "loading",
     objectiveFallbackCount = 0,
     objectiveLastQuest = nil,
-    objectiveUpstreamVerifiedQuest = nil,
 
     turnInState = "loading",
     turnInFallbackCount = 0,
     turnInLivePOICount = 0,
     turnInLastQuest = nil,
     turnInLastSource = nil,
-    turnInUpstreamVerifiedQuest = nil,
     liveTurnInCache = {},
+
+    turnInDBState = "loading",
+    turnInDBFallbackCount = 0,
+    turnInDBLastQuest = nil,
+    turnInDBLastSource = nil,
 
     guideState = "loading",
     guideRestoreCount = 0,
@@ -24,6 +27,13 @@ local QMC = {
     guideLastQuest = nil,
     guideLastRescueCount = 0,
     guideTransientGuardCount = 0,
+
+    guideAssistState = "loading",
+    guideAssistRefreshCount = 0,
+    guideAssistClusterCount = 0,
+    guideAssistPulseCount = 0,
+    guideAssistLastReason = nil,
+    guideAssistLastNearbyCount = 0,
 
     trackerState = "loading",
     trackerCarryCount = 0,
@@ -97,12 +107,16 @@ end
 function QMC:InstallPatches()
     self.objectiveIncompatibleReason = nil
     self.turnInIncompatibleReason = nil
+    self.turnInDBIncompatibleReason = nil
     self.guideIncompatibleReason = nil
+    self.guideAssistIncompatibleReason = nil
     self.trackerIncompatibleReason = nil
 
     local a = self:InstallObjectivePatch()
     local b = self:InstallTurnInPatch()
-    local c = self:InstallGuidePersistencePatch()
-    local d = self:InstallTrackerZonePatch()
-    return a or b or c or d
+    local c = self:InstallTurnInDatabaseBridge()
+    local d = self:InstallGuidePersistencePatch()
+    local e = self:InstallTrackerZonePatch()
+    local f = self:InstallGuideAssist()
+    return a or b or c or d or e or f
 end

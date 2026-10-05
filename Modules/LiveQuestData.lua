@@ -53,7 +53,7 @@ function Live.SafeStrictDiscoveryTurnIn(QM, questId)
     if not ok then return nil, false end
     local point = entry and entry.turnIn
     if not U.IsUsablePoint(point) then return nil, true end
-    return {x = point.x, y = point.y, mapId = point.mapId}, true
+    return {x = point.x, y = point.y, mapId = point.mapId, npcId = point.npcId}, true
 end
 
 function Live.IsQuestReadyForTurnIn(QM, questId, activeQuest)
@@ -108,10 +108,18 @@ function Live.QuestStillOnClient(questId)
     return false
 end
 
+function Live.ClearTurnInCache(questId)
+    if questId then
+        QMC.liveTurnInCache[questId] = nil
+    else
+        wipe(QMC.liveTurnInCache)
+    end
+end
+
 function Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
     local cached = QMC.liveTurnInCache[questId]
     if U.IsUsablePoint(cached) then
-        return {x = cached.x, y = cached.y, mapId = cached.mapId}, true
+        return {x = cached.x, y = cached.y, mapId = cached.mapId, npcId = cached.npcId}, true
     end
 
     if not Live.IsQuestReadyForTurnIn(QM, questId, activeQuest) then
@@ -138,7 +146,7 @@ function Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
 
                 -- Blizzard already knows the right place here, so I also hand the
                 -- map back to QM Discovery scan when it is available. That lets
-                -- QM keep the point instead of user owning it forever.
+                -- QM keep the point instead of us owning it forever.
                 if QM and QM.Discovery and type(QM.Discovery.ScanMap) == "function" then
                     pcall(QM.Discovery.ScanMap, QM.Discovery, mapId, true)
                 end
@@ -149,6 +157,19 @@ function Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
     end
 
     return nil, true
+end
+
+-- One place for both turn-in wrappers to ask the same question. A real learned
+-- turnIn wins. Blizzard's live point is only useful once the quest is ready.
+function Live.SafeVerifiedTurnIn(QM, questId, activeQuest)
+    local learned, discoveryOK = Live.SafeStrictDiscoveryTurnIn(QM, questId)
+    if not discoveryOK then return nil, nil, false end
+    if U.IsUsablePoint(learned) then return learned, "learned turn-in", true end
+
+    local livePOI, liveOK = Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
+    if not liveOK then return nil, nil, false end
+    if U.IsUsablePoint(livePOI) then return livePOI, "Blizzard live POI", true end
+    return nil, nil, true
 end
 
 function Live.PointsAgree(a, b)
@@ -164,4 +185,24 @@ function Live.DistanceToPointSafe(QM, loc)
     end
     local ok, d = pcall(QM.GetDistanceToPoint, QM, loc.x, loc.y, loc.mapId)
     return (ok and type(d) == "number") and d or math.huge
+end
+
+-- A cached live POI is only true for that quest state. Clear it when the quest
+-- is picked up, leaves the log, or gets handed in so repeatables cannot reuse an
+-- old point later in the same session.
+if CreateFrame then
+    local cacheFrame = CreateFrame("Frame")
+    cacheFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    cacheFrame:RegisterEvent("QUEST_ACCEPTED")
+    cacheFrame:RegisterEvent("QUEST_REMOVED")
+    cacheFrame:RegisterEvent("QUEST_TURNED_IN")
+    cacheFrame:SetScript("OnEvent", function(_, event)
+        if event == "PLAYER_ENTERING_WORLD" then
+            Live.ClearTurnInCache()
+        else
+            -- The table is tiny. Clearing the whole thing also avoids old-client
+            -- event argument weirdness where QUEST_ACCEPTED may pass a log index.
+            Live.ClearTurnInCache()
+        end
+    end)
 end

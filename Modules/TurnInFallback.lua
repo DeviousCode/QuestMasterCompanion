@@ -22,8 +22,6 @@ function QMC:RestoreTurnIn(reason)
 
     if reason == "manual" then
         self.turnInState = "disabled-manual"
-    elseif reason == "upstream-fixed" then
-        self.turnInState = "upstream-fixed"
     else
         self.turnInState = "inactive"
     end
@@ -73,24 +71,8 @@ function QMC:InstallTurnInPatch()
             return U.unpackValues(originalResults, 1, originalResults.n)
         end
 
-        local learned, discoveryOK = Live.SafeStrictDiscoveryTurnIn(selfQM, questId)
-        if not discoveryOK then
-            return U.unpackValues(originalResults, 1, originalResults.n)
-        end
-
-        local livePOI, liveOK = Live.SafeLiveTurnInPOI(selfQM, questId, activeQuest)
-        local verified = U.IsUsablePoint(learned) and learned or (liveOK and livePOI or nil)
-        local source = U.IsUsablePoint(learned) and "learned turn-in" or (U.IsUsablePoint(livePOI) and "Blizzard live POI" or nil)
-
-        -- Same idea as the objective patch: once QM own result matches the
-        -- verified turn-in, this wrapper retires itself instead of fighting QM.
-        if U.IsUsablePoint(originalResult) and U.IsUsablePoint(verified) and Live.PointsAgree(originalResult, verified) then
-            QMC.turnInUpstreamVerifiedQuest = questId
-            QMC:RestoreTurnIn("upstream-fixed")
-            QMC:Notify(
-                "QuestMaster now resolves unknown turn-ins correctly by itself (verified on " ..
-                Live.QuestTitle(selfQM, questId) .. " [" .. questId .. "]). Turn-in patch retired for this session."
-            )
+        local verified, source, verifiedOK = Live.SafeVerifiedTurnIn(selfQM, questId, activeQuest)
+        if not verifiedOK then
             return U.unpackValues(originalResults, 1, originalResults.n)
         end
 

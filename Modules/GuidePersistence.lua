@@ -229,8 +229,11 @@ function QMC:InstallGuidePersistencePatch()
     local QM = _G.QuestMaster
     local Guide = QM.Guide
 
-    if self.guideRebuildWrapper and self.guideWaypointWrapper and self.guideAutoSelectWrapper
-        and Guide.Rebuild == self.guideRebuildWrapper
+    local rebuildOwned = self.guideRebuildWrapper and (Guide.Rebuild == self.guideRebuildWrapper
+        or (self.guideAssistRebuildWrapper and Guide.Rebuild == self.guideAssistRebuildWrapper
+            and self.guideAssistRebuildOriginal == self.guideRebuildWrapper))
+
+    if rebuildOwned and self.guideWaypointWrapper and self.guideAutoSelectWrapper
         and Guide.SetWaypointToCurrent == self.guideWaypointWrapper
         and QM.AutoSelectBestWaypoint == self.guideAutoSelectWrapper then
         self.guideState = (self.guideRestoreCount > 0 or self.guideBlockedAutoCount > 0
@@ -239,7 +242,10 @@ function QMC:InstallGuidePersistencePatch()
         return true
     end
 
-    if (self.guideRebuildOriginal and Guide.Rebuild ~= self.guideRebuildOriginal)
+    local rebuildIsExpectedOriginal = not self.guideRebuildOriginal or Guide.Rebuild == self.guideRebuildOriginal
+    local rebuildIsAssistLayer = self.guideAssistRebuildWrapper and Guide.Rebuild == self.guideAssistRebuildWrapper
+        and self.guideAssistRebuildOriginal == self.guideRebuildWrapper
+    if (self.guideRebuildOriginal and not rebuildIsExpectedOriginal and not rebuildIsAssistLayer)
         or (self.guideWaypointOriginal and Guide.SetWaypointToCurrent ~= self.guideWaypointOriginal)
         or (self.guideAutoSelectOriginal and QM.AutoSelectBestWaypoint ~= self.guideAutoSelectOriginal) then
         self.guideState = "superseded"

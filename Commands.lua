@@ -19,13 +19,22 @@ local function HandleSlashCommand(input)
         end
     elseif command == "off" or command == "disable" then
         QMC:Saved().enabled = false
-        QMC:RestoreObjective("manual")
-        QMC:RestoreTurnIn("manual")
-        QMC:RestoreGuide("manual")
+        -- The guide assist sits outside the persistence wrapper, so it comes off first.
+        QMC:RestoreGuideAssist("manual")
         QMC:RestoreTracker("manual")
+        QMC:RestoreGuide("manual")
+        QMC:RestoreTurnInDatabaseBridge("manual")
+        QMC:RestoreTurnIn("manual")
+        QMC:RestoreObjective("manual")
         U.Print("disabled")
     elseif command == "test" then
         QMC:TestQuest(rest)
+    elseif command == "refresh" then
+        if QMC:RequestGuideAssistRefresh("manual refresh") then
+            U.Print("guide pickup scan queued")
+        else
+            U.Print("guide pickup scan not available")
+        end
     elseif command == "notify" then
         local value = string.lower(rest or "")
         if value == "on" then
@@ -38,7 +47,7 @@ local function HandleSlashCommand(input)
             U.Print("usage: /qmc notify on|off")
         end
     else
-        U.Print("commands: /qmc status | on | off | test <questID> | notify on|off")
+        U.Print("commands: /qmc status | on | off | refresh | test <questID> | notify on|off")
     end
 end
 
@@ -55,28 +64,9 @@ frame:SetScript("OnEvent", function(_, event, arg1)
         QMC:InstallPatches()
     elseif event == "PLAYER_LOGIN" then
         if QMC:Saved().enabled then
-            local QM = _G.QuestMaster
-            if QM then
-                if QMC.objectiveState ~= "upstream-fixed"
-                    and not (QMC.objectiveWrapper and QM.GetQuestObjectiveLocationsFixed == QMC.objectiveWrapper) then
-                    QMC:InstallObjectivePatch()
-                end
-                if QMC.turnInState ~= "upstream-fixed"
-                    and not (QMC.turnInWrapper and QM.GetQuestTurnInLocation == QMC.turnInWrapper) then
-                    QMC:InstallTurnInPatch()
-                end
-                if not (QMC.guideRebuildWrapper and QMC.guideWaypointWrapper and QMC.guideAutoSelectWrapper
-                    and QM.Guide and QM.Guide.Rebuild == QMC.guideRebuildWrapper
-                    and QM.Guide.SetWaypointToCurrent == QMC.guideWaypointWrapper
-                    and QM.AutoSelectBestWaypoint == QMC.guideAutoSelectWrapper) then
-                    QMC:InstallGuidePersistencePatch()
-                end
-                if not (QMC.trackerCompletedWrapper and QMC.trackerIncompleteWrapper
-                    and QM.GetCompletedQuests == QMC.trackerCompletedWrapper
-                    and QM.GetIncompleteQuests == QMC.trackerIncompleteWrapper) then
-                    QMC:InstallTrackerZonePatch()
-                end
-            end
+            -- Everything is idempotent, and doing it in the same order keeps the
+            -- two Guide layers stacked the same way after login or /qmc on.
+            QMC:InstallPatches()
         end
     end
 end)

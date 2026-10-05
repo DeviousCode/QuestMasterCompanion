@@ -22,8 +22,6 @@ function QMC:RestoreObjective(reason)
 
     if reason == "manual" then
         self.objectiveState = "disabled-manual"
-    elseif reason == "upstream-fixed" then
-        self.objectiveState = "upstream-fixed"
     else
         self.objectiveState = "inactive"
     end
@@ -56,9 +54,9 @@ function QMC:InstallObjectivePatch()
 
     self.objectiveOriginal = QM.GetQuestObjectiveLocationsFixed
 
-    -- Note: — this is the empty-table case i ran into with newer Forever quests.
-    -- QM normal resolver gets first shot every time. I only hand Discovery's
-    -- learned point back when the original answer is genuinely nil/empty.
+    -- This is the empty-table case i ran into with newer Forever quests.
+    -- QM gets first shot every time. One quest working does not mean every
+    -- resolver path is fixed, so this stays around and only fills real holes.
     self.objectiveWrapper = function(selfQM, questId, ...)
         local originalResults = U.Pack(QMC.objectiveOriginal(selfQM, questId, ...))
         local originalResult = originalResults[1]
@@ -78,18 +76,6 @@ function QMC:InstallObjectivePatch()
 
         local learned, discoveryOK = Live.SafeDiscoveryObjectives(selfQM, questId, objectiveCount)
         if not discoveryOK then
-            return U.unpackValues(originalResults, 1, originalResults.n)
-        end
-
-        -- If QM resolver starts returning the same learned data on its own,
-        -- this patch quietly gets out of the way for the rest of the session.
-        if U.IsUsableObjectiveResult(learned) and U.IsUsableObjectiveResult(originalResult) then
-            QMC.objectiveUpstreamVerifiedQuest = questId
-            QMC:RestoreObjective("upstream-fixed")
-            QMC:Notify(
-                "QuestMaster now resolves learned objectives by itself (verified on " ..
-                Live.QuestTitle(selfQM, questId) .. " [" .. questId .. "]). Objective patch retired for this session."
-            )
             return U.unpackValues(originalResults, 1, originalResults.n)
         end
 
