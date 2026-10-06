@@ -15,6 +15,30 @@ local function StepWaypointPoint(step)
     return step.map, step.x / 100, step.y / 100
 end
 
+local function RefreshRouteArrowText(QM)
+    local wp = QM and QM.currentWaypoint
+    local arrow = _G.QuestMasterArrow
+    local objective = arrow and arrow.objective
+    if not (wp and objective and type(objective.SetText) == "function") then return end
+
+    local settings = QM.db and QM.db.profile and QM.db.profile.arrow
+    if settings and settings.showObjective == false then return end
+
+    local text = wp.description
+    if type(text) ~= "string" or text == "" then return end
+
+    if type(QM.ArrowShorten) == "function" then
+        local ok, short = pcall(QM.ArrowShorten, text, 50)
+        if ok and short then text = short end
+    end
+
+    -- DrawArrow bails out early when the new step is already inside the
+    -- arrival range, so that little line can keep the last step's text.
+    -- The waypoint is already right here, just freshen the label too.
+    objective:SetText(text)
+    if type(objective.Show) == "function" then objective:Show() end
+end
+
 local function RouteWaypointStillCurrent(QM, Engine)
     if not (Engine and Engine.active and not Engine.active.paused and type(Engine.CurrentStep) == "function") then
         return false
@@ -103,6 +127,7 @@ function QMC:InstallRouteWaypointSync()
                 wp.fromRoute = true
                 wp.routeStepId = step.stepId
                 wp.routeKind = step.kind
+                RefreshRouteArrowText(QM)
 
                 QMC.routeWaypointTagCount = (QMC.routeWaypointTagCount or 0) + 1
                 QMC.routeWaypointLastQuest = step.questId or wp.questId

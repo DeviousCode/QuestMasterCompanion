@@ -1,5 +1,9 @@
 # Changelog
 
+## 0.8.4 — 2026-10-05
+
+- Fixed the little Arrived label hanging onto the last route step when the next NPC is already right beside you. The marker was moving correctly, the text just wasn't catching up.
+
 ## 0.8.3 — 2026-10-05
 
 - Cleaned up a bunch of the Companion stuff now that the newer QuestMaster updates handle some of it on their own. Basically removed some old fixes we don't really need anymore.

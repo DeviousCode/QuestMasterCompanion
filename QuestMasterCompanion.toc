@@ -2,7 +2,7 @@
 ## Title: QuestMaster Companion
 ## Notes: Small Forever helper for QuestMaster routes and live quest locations
 ## Author: SushiCode
-## Version: 0.8.3
+## Version: 0.8.4
 ## RequiredDeps: QuestMaster
 ## SavedVariables: QuestMasterCompanionDB
 ## X-Category: Quests

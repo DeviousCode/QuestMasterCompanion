@@ -1,7 +1,7 @@
 local addonName = ...
 
 local QMC = {
-    VERSION = "0.8.3",
+    VERSION = "0.8.4",
     ADDON_NAME = addonName,
 
     objectiveState = "loading",
