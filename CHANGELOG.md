@@ -1,5 +1,17 @@
 # Changelog
 
+## 0.9.5 — 2026-10-06
+
+- Added the guide-task experiment as one bigger Companion layer. Routes can now carry Companion-only lines like `QMC|GROUP`, `QMC|BACKGROUND`, `QMC|KILL`, `QMC|XP`, and `QMC|TIP`; the Companion reads those first, then hands QuestMaster a normal QMROUTE like usual.
+- Exporting keeps those Companion lines, so grouped stops, background tasks, custom kill counters, XP checks, and tips do not disappear after import.
+- Grouped stops are cleaner now. The extra **While moving** block is gone, background steps stay out of the upcoming-route rows, and grouped item jobs show a live count in the normal route line instead of turning into a giant sentence.
+- Added the first fake route task: **Farm for water**. It points at the early Young Scavenger/Duskbat area, counts 10 combined kills with Forever's `PARTY_KILL` event, keeps that custom progress per character, then sends you back for **Buy Water 0/10**.
+- XP grind steps can finish on their own now. The test route watches the real level 3 and level 5 XP thresholds, and leveling past the threshold counts too.
+- If a route moves to a step with no usable waypoint, the old route marker gets cleared instead of hanging around with the last step's text.
+- Coordinate-free route pickups get one fresh Discovery check after accepts/turn-ins now. It waits for QuestMaster's normal quest update, scans the current map + quest lines, retries once for late Blizzard data, and only does this for `ACCEPT` steps that have no authored point and no known start.
+- **A Light in the Darkness** was not a bad quest id. Forever just did not expose that pre-accept location reliably, so the test route now uses the known Aramis Hammerhand point for the pickup and the later turn-in.
+- Updated the Undead Priest test route with the water-buy stop, grouped setup/training stops, background objectives for **The Damned**, explicit **Power Word: Fortitude (Rank 1)** training from Dark Cleric Duesten, XP checks, the custom farm counter, and the Aramis point. Test route is v8 now.
+
 ## 0.8.4 — 2026-10-05
 
 - Fixed the little Arrived label hanging onto the last route step when the next NPC is already right beside you. The marker was moving correctly, the text just wasn't catching up.

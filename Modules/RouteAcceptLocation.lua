@@ -13,6 +13,19 @@ if not QMC then return end
 -- already sitting there waiting for it.
 
 local POSITION_EPSILON = 0.0005
+local DISCOVERY_SCAN_THROTTLE = 2
+
+local function CurrentMapId()
+    if QMC.Live and type(QMC.Live.CurrentMapId) == "function" then
+        local ok, mapId = pcall(QMC.Live.CurrentMapId)
+        if ok and type(mapId) == "number" and mapId > 0 then return mapId end
+    end
+
+    if C_Map and type(C_Map.GetBestMapForUnit) == "function" then
+        local ok, mapId = pcall(C_Map.GetBestMapForUnit, "player")
+        if ok and type(mapId) == "number" and mapId > 0 then return mapId end
+    end
+end
 
 local function HasOwnPoint(step)
     return step
@@ -45,6 +58,58 @@ local function WaypointMatchesStart(QM, questId, starts)
         end
     end
     return false
+end
+
+function QMC:RefreshRouteAcceptDiscovery(questId, force)
+    local QM = _G.QuestMaster
+    local Discovery = QM and QM.Discovery
+    questId = tonumber(questId)
+
+    if not (QM and Discovery and questId and questId > 0) then return false end
+    if type(Discovery.IsEnabled) == "function" then
+        local ok, enabled = pcall(Discovery.IsEnabled, Discovery)
+        if ok and not enabled then return false end
+    end
+
+    local mapId = CurrentMapId()
+    if not mapId then return false end
+
+    self.routeAcceptDiscoveryTryAt = self.routeAcceptDiscoveryTryAt or {}
+    local now = type(GetTime) == "function" and GetTime() or 0
+    local last = self.routeAcceptDiscoveryTryAt[questId]
+    if not force and last and (now - last) < DISCOVERY_SCAN_THROTTLE then
+        return false
+    end
+    self.routeAcceptDiscoveryTryAt[questId] = now
+
+    -- This is only for a route pickup we cannot place yet. Ask Discovery for
+    -- the current map and its quest lines, then check that one quest again.
+    if type(Discovery.ScanMap) == "function" then
+        pcall(Discovery.ScanMap, Discovery, mapId, true)
+    end
+    if type(Discovery.ScanQuestLines) == "function" then
+        pcall(Discovery.ScanQuestLines, Discovery, mapId, true)
+    end
+
+    if type(QM.InvalidateAvailableQuestCache) == "function" then
+        pcall(QM.InvalidateAvailableQuestCache, QM)
+    end
+    if type(QM.InvalidateQuestLocationCache) == "function" then
+        pcall(QM.InvalidateQuestLocationCache, QM, questId)
+    end
+
+    self.routeAcceptDiscoveryScanCount = (self.routeAcceptDiscoveryScanCount or 0) + 1
+    self.routeAcceptLastDiscoveryQuest = questId
+
+    local starts = type(QM.GetQuestStartLocations) == "function"
+        and QM:GetQuestStartLocations(questId) or nil
+    if type(starts) == "table" and #starts > 0 then
+        self.routeAcceptDiscoveryHitCount = (self.routeAcceptDiscoveryHitCount or 0) + 1
+        self.routeAcceptLastSource = "QuestMaster Discovery refresh"
+        return true, starts
+    end
+
+    return false, starts
 end
 
 local function BestStart(QM, starts)
@@ -138,6 +203,16 @@ function QMC:InstallRouteAcceptLocation()
         end
 
         local starts = QM:GetQuestStartLocations(step.questId)
+        if type(starts) ~= "table" or #starts == 0 then
+            -- A follow-up quest may have appeared only after the last hand-in.
+            -- Give Discovery one targeted refresh before giving up on the pickup.
+            local _, refreshed = QMC:RefreshRouteAcceptDiscovery(step.questId, false)
+            if type(refreshed) == "table" and #refreshed > 0 then
+                starts = refreshed
+            else
+                starts = QM:GetQuestStartLocations(step.questId)
+            end
+        end
         if type(starts) ~= "table" or #starts == 0 then
             return original(engine, silent, ...)
         end

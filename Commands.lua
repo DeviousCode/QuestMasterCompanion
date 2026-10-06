@@ -16,6 +16,7 @@ local function HandleSlashCommand(input)
     elseif command == "off" or command == "disable" then
         QMC:Saved().enabled = false
         QMC:RestoreWorldMarkerOpacity("manual")
+        QMC:RestoreGuideTasks("manual")
         QMC:RestoreRouteLibraryRemove("manual")
         QMC:RestoreRouteEventNavigation("manual")
         QMC:RestoreRouteWaypointSync("manual")

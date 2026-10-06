@@ -119,9 +119,12 @@ function QMC:InstallRouteWaypointSync()
     self.routeWaypointOriginalHold = originalHold
 
     local setWrapper = function(engine, silent, ...)
+        local oldWaypoint = QM.currentWaypoint
+        local oldRouteStep = oldWaypoint and oldWaypoint.fromRoute and oldWaypoint.routeStepId or nil
         local ok = originalSet(engine, silent, ...)
+        local step = engine and engine:CurrentStep()
+
         if ok and engine and engine.active and QM.currentWaypoint then
-            local step = engine:CurrentStep()
             local wp = QM.currentWaypoint
             if step then
                 wp.fromRoute = true
@@ -134,6 +137,14 @@ function QMC:InstallRouteWaypointSync()
                 QMC.routeWaypointLastKind = step.kind
                 QMC.routeWaypointState = "used"
             end
+        elseif step and oldRouteStep and oldRouteStep ~= step.stepId
+            and QM.currentWaypoint == oldWaypoint and type(QM.ClearWaypoint) == "function" then
+            -- New route step has nowhere usable to point right now. Don't leave
+            -- the last step's marker sitting there pretending it is still current.
+            QM:ClearWaypoint()
+            QMC.routeWaypointStaleClearCount = (QMC.routeWaypointStaleClearCount or 0) + 1
+            QMC.routeWaypointLastKind = step.kind
+            QMC.routeWaypointState = "used"
         end
         return ok
     end

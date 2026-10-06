@@ -34,6 +34,8 @@ function QMC:Status()
         self.routeWaypointProtectCount, self.routeWaypointLastQuest, self.routeWaypointIncompatibleReason)
     StateLine("route event nav", self.routeEventNavState,
         self.routeEventNavCount, self.routeEventNavLastQuest, self.routeEventNavIncompatibleReason)
+    StateLine("guide tasks", self.routeGuideState,
+        self.routeGuideImportCount, nil, self.routeGuideIncompatibleReason)
     StateLine("route remove", self.routeRemoveState,
         self.routeRemoveCount, nil, self.routeRemoveIncompatibleReason)
     StateLine("world marker opacity", self.worldMarkerOpacityState,
@@ -43,6 +45,12 @@ function QMC:Status()
         U.Print("route accept: fixes " .. tostring(self.routeAcceptFixCount or 0)
             .. (self.routeAcceptLastQuest and (" | last quest " .. tostring(self.routeAcceptLastQuest)) or "")
             .. (self.routeAcceptLastSource and (" | " .. tostring(self.routeAcceptLastSource)) or ""))
+    end
+
+    if self.routeAcceptDiscoveryScanCount and self.routeAcceptDiscoveryScanCount > 0 then
+        U.Print("route pickup refresh: scans " .. tostring(self.routeAcceptDiscoveryScanCount or 0)
+            .. " | found " .. tostring(self.routeAcceptDiscoveryHitCount or 0)
+            .. (self.routeAcceptLastDiscoveryQuest and (" | last quest " .. tostring(self.routeAcceptLastDiscoveryQuest)) or ""))
     end
 
     if self.routeWaypointLastQuest then
@@ -55,9 +63,19 @@ function QMC:Status()
 
     if self.routeEventNavCount and self.routeEventNavCount > 0 then
         U.Print("route event nav: redirects " .. tostring(self.routeEventNavCount or 0)
+            .. " | retries " .. tostring(self.routeEventNavRetryCount or 0)
             .. " | rehooks " .. tostring(self.routeEventNavRehookCount or 0)
             .. " | last: " .. tostring(self.routeEventNavLastKind or "step")
             .. (self.routeEventNavLastQuest and (" quest " .. tostring(self.routeEventNavLastQuest)) or ""))
+    end
+
+
+    if self.routeGuideParseCount and self.routeGuideParseCount > 0 then
+        U.Print("guide tasks: parsed " .. tostring(self.routeGuideParseCount or 0)
+            .. " | background started " .. tostring(self.routeGuideBackgroundCount or 0)
+            .. " | finished " .. tostring(self.routeGuideCompleteCount or 0)
+            .. " | custom kills " .. tostring(self.routeGuideKillCount or 0)
+            .. (self.routeGuideLastPackage and (" | last: " .. tostring(self.routeGuideLastPackage)) or ""))
     end
 
     if self.routeRemoveButtonCount and self.routeRemoveButtonCount > 0 then
@@ -83,6 +101,7 @@ function QMC:Status()
             .. " | route accept " .. ((Engine and self.routeAcceptWrapper and Engine.SetWaypointToCurrent == self.routeWaypointSetWrapper and self.routeAcceptInstalledUnderWaypoint) and "companion" or ((Engine and self.routeAcceptWrapper and Engine.SetWaypointToCurrent == self.routeAcceptWrapper) and "companion" or "QuestMaster"))
             .. " | route waypoint " .. ((Engine and self.routeWaypointSetWrapper and Engine.SetWaypointToCurrent == self.routeWaypointSetWrapper and self.routeWaypointHoldWrapper and QM.ManualWaypointHolds == self.routeWaypointHoldWrapper) and "companion" or "QuestMaster")
             .. " | route event nav " .. ((self.routeEventNavWrapper and QM.NavigateAfterQuestEvent == self.routeEventNavWrapper) and "companion" or "QuestMaster")
+            .. " | guide tasks " .. ((Engine and self.routeGuideAdvanceWrapper and Engine.Advance == self.routeGuideAdvanceWrapper) and "companion" or "QuestMaster")
             .. " | route remove " .. ((self.routeRemoveWrapper and QM.CreateRoutesTab == self.routeRemoveWrapper) and "companion" or "QuestMaster")
             .. " | marker opacity " .. ((self.worldMarkerUpdateWrapper and QM.WorldMarker and QM.WorldMarker.UpdateMarker == self.worldMarkerUpdateWrapper and self.worldMarkerOptionsWrapper and QM.CreateArrowTab == self.worldMarkerOptionsWrapper) and "companion" or "QuestMaster"))
     end

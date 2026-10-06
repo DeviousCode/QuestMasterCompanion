@@ -6,6 +6,22 @@ if not QMC then return end
 -- is playing, but a running route already has its own next step. Let the route
 -- settle and put its own waypoint back instead of handing the arrow to Guide.
 
+local function HasOwnPoint(step)
+    return step
+        and type(step.map) == "number"
+        and type(step.x) == "number"
+        and type(step.y) == "number"
+end
+
+local function NeedsPickupLookup(QM, step)
+    if not (QM and step and step.kind == "ACCEPT" and step.questId and not HasOwnPoint(step)) then
+        return false
+    end
+    if type(QM.GetQuestStartLocations) ~= "function" then return false end
+    local starts = QM:GetQuestStartLocations(step.questId)
+    return type(starts) ~= "table" or #starts == 0
+end
+
 local function RouteIsPlaying(Engine)
     if not Engine then return false end
     if type(Engine.IsActive) == "function" and not Engine:IsActive() then return false end
@@ -96,12 +112,51 @@ function QMC:InstallRouteEventNavigation()
             local step = nowEngine:CurrentStep()
             if not step then return end
 
+            -- Turn-ins and pickups can unlock the next quest right beside you.
+            -- If the route's next ACCEPT still has no start point, refresh
+            -- Discovery now that Blizzard has had a second to update the hub.
+            local needsRetry = NeedsPickupLookup(selfQM, step)
+            if needsRetry and type(QMC.RefreshRouteAcceptDiscovery) == "function" then
+                pcall(QMC.RefreshRouteAcceptDiscovery, QMC, step.questId, true)
+            end
+
             local ok, placed = pcall(nowEngine.SetWaypointToCurrent, nowEngine, true)
             if ok and placed then
                 QMC.routeEventNavCount = (QMC.routeEventNavCount or 0) + 1
                 QMC.routeEventNavLastQuest = step.questId
                 QMC.routeEventNavLastKind = step.kind
                 QMC.routeEventNavState = "used"
+            elseif needsRetry and C_Timer and C_Timer.After then
+                -- Quest-line data can arrive just after the scan request. One
+                -- small retry is enough; if Blizzard still has nothing, leave it.
+                local stepId, questId = step.stepId, step.questId
+                C_Timer.After(0.8, function()
+                    local retryEngine = selfQM.Routes and selfQM.Routes.Engine
+                    if not RouteIsPlaying(retryEngine) then return end
+
+                    local retryStep = retryEngine:CurrentStep()
+                    if not (retryStep and retryStep.stepId == stepId and retryStep.questId == questId
+                        and retryStep.kind == "ACCEPT" and not HasOwnPoint(retryStep)) then
+                        return
+                    end
+
+                    if type(QMC.RefreshRouteAcceptDiscovery) == "function" then
+                        pcall(QMC.RefreshRouteAcceptDiscovery, QMC, questId, true)
+                    end
+
+                    local retryOK, retryPlaced = pcall(retryEngine.SetWaypointToCurrent, retryEngine, true)
+                    if retryOK and retryPlaced then
+                        QMC.routeEventNavCount = (QMC.routeEventNavCount or 0) + 1
+                        QMC.routeEventNavRetryCount = (QMC.routeEventNavRetryCount or 0) + 1
+                        QMC.routeEventNavLastQuest = questId
+                        QMC.routeEventNavLastKind = retryStep.kind
+                        QMC.routeEventNavState = "used"
+                    end
+
+                    if type(retryEngine.Refresh) == "function" then
+                        pcall(retryEngine.Refresh, retryEngine)
+                    end
+                end)
             end
 
             if type(nowEngine.Refresh) == "function" then

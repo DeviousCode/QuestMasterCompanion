@@ -1,8 +1,8 @@
 ## Interface: 16000, 16001
 ## Title: QuestMaster Companion
-## Notes: Small Forever helper for QuestMaster routes and live quest locations
+## Notes: Companion bridge for QuestMaster routes, guide tasks, and live quest locations
 ## Author: SushiCode
-## Version: 0.8.4
+## Version: 0.9.5
 ## RequiredDeps: QuestMaster
 ## SavedVariables: QuestMasterCompanionDB
 ## X-Category: Quests
@@ -12,6 +12,7 @@ Modules/LiveQuestData.lua
 Modules/ObjectivePriority.lua
 Modules/TurnInPriority.lua
 Modules/RouteImportFix.lua
+Modules/GuideTasks.lua
 Modules/RouteRuntimeSync.lua
 Modules/RouteAcceptLocation.lua
 Modules/RouteWaypointSync.lua

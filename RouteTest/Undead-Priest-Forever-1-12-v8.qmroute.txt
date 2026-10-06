@@ -1,12 +1,24 @@
 QMROUTE|1
-P|qm.forever.undead.priest|3|WoW Forever - Undead Priest Speed Route|Custom QuestMaster Route|QuestMaster-compatible|enUS|0
-M|wow-forever-undead-priest|custom|Current public Forever speed-route data adapted to QuestMaster\s quest-native waypoint review|2026-10-05-r3
+P|qm.forever.undead.priest|8|WoW Forever - Undead Priest Speed Route|Custom QuestMaster Route|QuestMaster-compatible|enUS|0
+M|wow-forever-undead-priest|custom|Current public Forever speed-route data adapted to QuestMaster\s quest-native waypoint review|2026-10-06-r8
 C|Forever||
-R|forever.undead.priest.01-06|Undead Priest 1-6 - Deathknell|1|6|Horde|Scourge|PRIEST|WoW Forever Undead Priest speed route\c Deathknell. Quest steps defer to QuestMaster/game quest data for locations; only deliberate routing steps carry coordinates.
+R|forever.undead.priest.01-06|Undead Priest 1-6 - Deathknell|1|6|Horde|Scourge|PRIEST|WoW Forever Undead Priest speed route\c Deathknell. Quest steps usually defer to QuestMaster/game quest data for locations; known Forever-only pickups can keep an authored point when the client does not expose them before acceptance.
 S|s001|ACCEPT||||363|||Accept Rude Awakening
+S|s001a|TRAVEL|1420|29.18|68.94||||Farm for water
+QMC|KILL|count=10|targets=1508:Young Scavengers;1512:Duskbats
+QMC|TIP|Kill Young Scavengers and Duskbats for vendor junk. Loot them, then sell the junk to Joshua Kien so you can buy 10 Refreshing Spring Water.
+QMC|GROUP|deathknell-start|Deathknell setup
+S|s002a|BUY|1420|32.29|65.44||||Buy Water
+X|count=10,itemId=159,npcId=2115
+QMC|TIP|Sell the junk you picked up, then buy Refreshing Spring Water until you have 10.
 S|s002|TURNIN||||363|||Turn in Rude Awakening
 S|s003|ACCEPT||||364|||Accept The Mindless Ones
 S|s004|ACCEPT||||376|||Accept The Damned
+QMC|ENDGROUP|deathknell-start
+S|s004a|OBJECTIVE||||376|1||Duskbats - The Damned
+QMC|BACKGROUND|until=s011
+S|s004b|OBJECTIVE||||376|2||Scavenger Paws - The Damned
+QMC|BACKGROUND|until=s012
 S|s005|OBJECTIVE||||364|1||Complete objective 1\c The Mindless Ones
 S|s006|OBJECTIVE||||364|2||Complete objective 2\c The Mindless Ones
 S|s007|TURNIN||||364|||Turn in The Mindless Ones
@@ -16,17 +28,20 @@ S|s010|TURNIN||||3097|||Turn in Hallowed Scroll
 S|s011|OBJECTIVE||||376|1||Complete objective 1\c The Damned
 S|s012|OBJECTIVE||||376|2||Complete objective 2\c The Damned
 S|s013|OBJECTIVE||||3901|1||Complete objective 1\c Rattling the Rattlecages
-S|s014|NOTE|1420|33.01|63.01||||Grind until you are at least 980 / 1400 XP into level 3\m then confirm.
+S|s014|NOTE|1420|33.01|63.01||||Grind to 980 XP
+QMC|XP|level=3|min=980
 S|s015|TURNIN||||3901|||Turn in Rattling the Rattlecages
 S|s016|TURNIN||||376|||Turn in The Damned
 S|s017|ACCEPT||||6395|||Accept Marla's Last Wish
-S|s018|ACCEPT||||98389|||Accept A Light in the Darkness
+S|s018|ACCEPT|1420|31.09|66.41|98389|||Accept A Light in the Darkness
+QMC|GROUP|priest-training-4|Priest training
 S|s019|TRAIN|1420|31.11|66.02||||Train Shadow Word\c Pain
 X|spellId=589
 S|s020|TRAIN|1420|31.11|66.02||||Train Lesser Heal (Rank 2)
 X|spellId=2052
-S|s021|TRAIN|1420|31.11|66.02||||Train Power Word\c Fortitude
-X|spellId=1243
+S|s021|TRAIN|1420|31.11|66.03||||Train Power Word\c Fortitude (Rank 1)
+X|npcId=2123,spellId=1243
+QMC|ENDGROUP|priest-training-4
 S|s022|ACCEPT||||3902|||Accept Scavenging Deathknell
 S|s023|ACCEPT||||380|||Accept Night Web's Hollow
 S|s024|OBJECTIVE||||3902|1||Complete objective 1\c Scavenging Deathknell
@@ -37,7 +52,7 @@ S|s028|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to s
 S|s029|TURNIN||||3902|||Turn in Scavenging Deathknell
 S|s030|TURNIN||||380|||Turn in Night Web's Hollow
 S|s031|ACCEPT||||381|||Accept The Scarlet Crusade
-S|s032|TURNIN||||98389|||Turn in A Light in the Darkness
+S|s032|TURNIN|1420|31.09|66.41|98389|||Turn in A Light in the Darkness
 S|s033|OBJECTIVE||||381|1||Complete objective 1\c The Scarlet Crusade
 S|s034|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
 S|s035|OBJECTIVE||||6395|1||Complete objective 1\c Marla's Last Wish
@@ -49,7 +64,8 @@ S|s040|OBJECTIVE||||382|1||Complete objective 1\c The Red Messenger
 S|s041|TURNIN||||382|||Turn in The Red Messenger
 S|s042|ACCEPT||||383|||Accept Vital Intelligence
 S|s043|ACCEPT||||96656|||Accept The Adventurer
-S|s044|NOTE|1420|36.13|68.74||||Grind until you are at least 1940 / 2800 XP into level 5\m then confirm.
+S|s044|NOTE|1420|36.13|68.74||||Grind to 1940 XP
+QMC|XP|level=5|min=1940
 S|s045|ACCEPT||||8|||Accept A Rogue's Deal
 R|forever.undead.priest.06-12|Undead Priest 6-12 - Tirisfal|6|12|Horde|Scourge|PRIEST|WoW Forever Undead Priest speed route\c Brill and Tirisfal through the Undercity handoff. Quest steps are location-free by default; deliberate trainer\m travel\m grind\m and item-route points keep coordinates.
 S|s001|ACCEPT||||365|||Accept Fields of Grief
@@ -74,6 +90,7 @@ S|s018|ACCEPT||||99141|||Accept Patience
 S|s019|ACCEPT||||99134|||Accept Discipline
 S|s020|OBJECTIVE||||99134|1||Complete objective 1\c Discipline
 S|s021|TURNIN||||8|||Turn in A Rogue's Deal
+QMC|GROUP|brill-setup|Brill setup
 S|s022|BIND|1420|61.72|52.06||||Set your Hearthstone to Brill.
 X|bindLocation=Brill
 S|s023|TRAIN|1420|61.75|51.43||||Train Cooking
@@ -90,6 +107,7 @@ S|s030|TRAIN|1420|61.57|52.19||||Train Lesser Heal (Rank 2)
 X|spellId=2052
 S|s031|TRAIN|1420|61.77|51.56||||Train Enchanting. Together with Tailoring this provides the fallback Lesser Magic Wand path.
 X|spellId=7411
+QMC|ENDGROUP|brill-setup
 S|s032|OBJECTIVE||||99141|2||Complete objective 2\c Patience
 S|s033|ACCEPT||||97558|||Accept Hides for the Forsaken
 S|s034|OBJECTIVE||||5650|1||Complete objective 1\c Garments of Darkness
@@ -248,4 +266,4 @@ S|s171|COLLECT|||||||Wand fallback\c create a Lesser Magic Wand.
 X|count=1,itemId=11287
 S|s172|EQUIP||||||1|Equip the Lesser Magic Wand.
 X|itemId=11287
-END|c016ac54
+END|50fae982

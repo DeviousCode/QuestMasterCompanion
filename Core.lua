@@ -1,7 +1,7 @@
 local addonName = ...
 
 local QMC = {
-    VERSION = "0.8.4",
+    VERSION = "0.9.5",
     ADDON_NAME = addonName,
 
     objectiveState = "loading",
@@ -29,6 +29,9 @@ local QMC = {
     routeAcceptFixCount = 0,
     routeAcceptLastQuest = nil,
     routeAcceptLastSource = nil,
+    routeAcceptDiscoveryScanCount = 0,
+    routeAcceptDiscoveryHitCount = 0,
+    routeAcceptLastDiscoveryQuest = nil,
 
     routeWaypointState = "loading",
     routeWaypointTagCount = 0,
@@ -42,6 +45,16 @@ local QMC = {
     routeEventNavRehookCount = 0,
     routeEventNavLastQuest = nil,
     routeEventNavLastKind = nil,
+    routeEventNavRetryCount = 0,
+
+
+    routeGuideState = "loading",
+    routeGuideParseCount = 0,
+    routeGuideImportCount = 0,
+    routeGuideBackgroundCount = 0,
+    routeGuideCompleteCount = 0,
+    routeGuideKillCount = 0,
+    routeGuideLastPackage = nil,
 
     routeRemoveState = "loading",
     routeRemoveCount = 0,
@@ -107,6 +120,8 @@ function QMC:Saved()
     if QuestMasterCompanionDB.notifications == nil then QuestMasterCompanionDB.notifications = true end
     if QuestMasterCompanionDB.worldMarkerFarAlpha == nil then QuestMasterCompanionDB.worldMarkerFarAlpha = 1.0 end
     if QuestMasterCompanionDB.worldMarkerArrivalAlpha == nil then QuestMasterCompanionDB.worldMarkerArrivalAlpha = 1.0 end
+    QuestMasterCompanionDB.routeGuideMeta = QuestMasterCompanionDB.routeGuideMeta or {}
+    QuestMasterCompanionDB.routeGuideTaskProgress = QuestMasterCompanionDB.routeGuideTaskProgress or {}
     return QuestMasterCompanionDB
 end
 
@@ -143,6 +158,7 @@ function QMC:InstallPatches()
     self.routeAcceptIncompatibleReason = nil
     self.routeWaypointIncompatibleReason = nil
     self.routeEventNavIncompatibleReason = nil
+    self.routeGuideIncompatibleReason = nil
     self.routeRemoveIncompatibleReason = nil
     self.worldMarkerOpacityIncompatibleReason = nil
 
@@ -152,14 +168,14 @@ function QMC:InstallPatches()
     if not updated then
         self.objectiveState = "waiting-upstream"
         self.turnInState = "waiting-upstream"
-        self.routeImportState = "waiting-upstream"
         self.routeRuntimeState = "waiting-upstream"
         self.routeAcceptState = "waiting-upstream"
         self.routeWaypointState = "waiting-upstream"
         self.routeEventNavState = "waiting-upstream"
+        self.routeGuideState = "waiting-upstream"
         self.routeRemoveState = "waiting-upstream"
         self.worldMarkerOpacityState = "waiting-upstream"
-        return false
+        return self:InstallRouteImportFix()
     end
 
     local a = self:InstallObjectivePriority()
@@ -169,7 +185,8 @@ function QMC:InstallPatches()
     local e = self:InstallRouteAcceptLocation()
     local f = self:InstallRouteWaypointSync()
     local g = self:InstallRouteEventNavigation()
-    local h = self:InstallRouteLibraryRemove()
-    local i = self:InstallWorldMarkerOpacity()
-    return a or b or c or d or e or f or g or h or i
+    local h = self:InstallGuideTasks()
+    local i = self:InstallRouteLibraryRemove()
+    local j = self:InstallWorldMarkerOpacity()
+    return a or b or c or d or e or f or g or h or i or j
 end

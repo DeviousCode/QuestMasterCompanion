@@ -1,9 +1,9 @@
 local QMC = _G.QuestMasterCompanion
 if not QMC then return end
 
--- WoW escapes | and \\ when text comes back out of an EditBox. QuestMaster's
--- route format uses both of those characters, so a pasted QMROUTE can reach
--- Codec.Decode with one extra UI escape layer on it.
+local U = QMC.Util
+
+-- WoW can hand pasted route text back with one extra escape layer on it.
 local function RemoveEditBoxEscapeLayer(text)
     if type(text) ~= "string" then return text, false end
 
@@ -12,9 +12,6 @@ local function RemoveEditBoxEscapeLayer(text)
         return text, false
     end
 
-    -- Every real pipe/backslash was doubled by EditBox:GetText(). Halving the
-    -- pairs restores the exact package text, including runs of empty | fields
-    -- and the route codec's own \\c / \\m style escapes.
     local cleaned = text:gsub("||", "|")
     cleaned = cleaned:gsub("\\\\", "\\")
     return cleaned, true
@@ -30,9 +27,6 @@ local function CodecAlreadyHandlesEditBoxText(Codec, Schema)
     local magic = tostring(Codec.MAGIC or "QMROUTE")
     local body = magic .. "|" .. tostring(schema)
     local canonical = body .. "\nEND|" .. Codec.Checksum(body)
-
-    -- Mimic one GetText() pass. If QuestMaster can already decode this, there
-    -- is nothing for the Companion to patch.
     local escaped = canonical:gsub("\\", "\\\\"):gsub("|", "||")
     local ok, pkg = pcall(Codec.Decode, escaped)
     return ok and type(pkg) == "table" and tonumber(pkg.schemaVersion) == schema
@@ -60,22 +54,51 @@ function QMC:InstallRouteImportFix()
         return true
     end
 
-    if CodecAlreadyHandlesEditBoxText(Codec, Schema) then
-        self.routeImportState = "upstream"
-        self.routeImportIncompatibleReason = nil
+    if self.routeImportOriginal and Codec.Decode ~= self.routeImportOriginal then
+        self.routeImportState = "changed"
+        self.routeImportIncompatibleReason = "route decoder was replaced by another addon/update"
         return false
     end
 
     local original = Codec.Decode
     self.routeImportOriginal = original
+    self.routeImportNeedsEscapeFix = not CodecAlreadyHandlesEditBoxText(Codec, Schema)
 
     local wrapper = function(text, ...)
-        local cleaned, changed = RemoveEditBoxEscapeLayer(text)
-        if changed then
-            QMC.routeImportNormalizeCount = (QMC.routeImportNormalizeCount or 0) + 1
-            QMC.routeImportLastReason = "removed WoW EditBox escape layer"
+        local cleaned = text
+        if QMC.routeImportNeedsEscapeFix then
+            local changed
+            cleaned, changed = RemoveEditBoxEscapeLayer(cleaned)
+            if changed then
+                QMC.routeImportNormalizeCount = (QMC.routeImportNormalizeCount or 0) + 1
+                QMC.routeImportLastReason = "removed WoW EditBox escape layer"
+            end
         end
-        return original(cleaned, ...)
+
+        local prepared, meta, hadGuide, guideError = cleaned, nil, false, nil
+        if type(QMC.PreprocessGuideRoute) == "function" then
+            prepared, meta, hadGuide, guideError = QMC:PreprocessGuideRoute(cleaned, Codec)
+        end
+        if guideError then
+            return nil, {guideError}
+        end
+
+        local out = U.Pack(original(prepared, ...))
+        local pkg = out[1]
+        if pkg and meta then
+            if type(QMC.ValidateGuideMeta) == "function" then
+                local ok, errors = QMC:ValidateGuideMeta(pkg, meta)
+                if not ok then return nil, errors end
+            end
+            QMC:RegisterPendingGuideMeta(pkg, meta)
+            QMC.routeGuideParseCount = (QMC.routeGuideParseCount or 0) + 1
+            QMC.routeGuideState = "active"
+            QMC.routeImportLastReason = "read Companion guide tasks"
+        elseif hadGuide and not pkg then
+            QMC.routeGuideState = "parse-error"
+        end
+
+        return U.unpackValues(out, 1, out.n)
     end
 
     self.routeImportWrapper = wrapper
