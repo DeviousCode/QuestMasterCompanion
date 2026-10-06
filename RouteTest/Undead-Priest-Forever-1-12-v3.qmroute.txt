@@ -1,0 +1,251 @@
+QMROUTE|1
+P|qm.forever.undead.priest|3|WoW Forever - Undead Priest Speed Route|Custom QuestMaster Route|QuestMaster-compatible|enUS|0
+M|wow-forever-undead-priest|custom|Current public Forever speed-route data adapted to QuestMaster\s quest-native waypoint review|2026-10-05-r3
+C|Forever||
+R|forever.undead.priest.01-06|Undead Priest 1-6 - Deathknell|1|6|Horde|Scourge|PRIEST|WoW Forever Undead Priest speed route\c Deathknell. Quest steps defer to QuestMaster/game quest data for locations; only deliberate routing steps carry coordinates.
+S|s001|ACCEPT||||363|||Accept Rude Awakening
+S|s002|TURNIN||||363|||Turn in Rude Awakening
+S|s003|ACCEPT||||364|||Accept The Mindless Ones
+S|s004|ACCEPT||||376|||Accept The Damned
+S|s005|OBJECTIVE||||364|1||Complete objective 1\c The Mindless Ones
+S|s006|OBJECTIVE||||364|2||Complete objective 2\c The Mindless Ones
+S|s007|TURNIN||||364|||Turn in The Mindless Ones
+S|s008|ACCEPT||||3097|||Accept Hallowed Scroll
+S|s009|ACCEPT||||3901|||Accept Rattling the Rattlecages
+S|s010|TURNIN||||3097|||Turn in Hallowed Scroll
+S|s011|OBJECTIVE||||376|1||Complete objective 1\c The Damned
+S|s012|OBJECTIVE||||376|2||Complete objective 2\c The Damned
+S|s013|OBJECTIVE||||3901|1||Complete objective 1\c Rattling the Rattlecages
+S|s014|NOTE|1420|33.01|63.01||||Grind until you are at least 980 / 1400 XP into level 3\m then confirm.
+S|s015|TURNIN||||3901|||Turn in Rattling the Rattlecages
+S|s016|TURNIN||||376|||Turn in The Damned
+S|s017|ACCEPT||||6395|||Accept Marla's Last Wish
+S|s018|ACCEPT||||98389|||Accept A Light in the Darkness
+S|s019|TRAIN|1420|31.11|66.02||||Train Shadow Word\c Pain
+X|spellId=589
+S|s020|TRAIN|1420|31.11|66.02||||Train Lesser Heal (Rank 2)
+X|spellId=2052
+S|s021|TRAIN|1420|31.11|66.02||||Train Power Word\c Fortitude
+X|spellId=1243
+S|s022|ACCEPT||||3902|||Accept Scavenging Deathknell
+S|s023|ACCEPT||||380|||Accept Night Web's Hollow
+S|s024|OBJECTIVE||||3902|1||Complete objective 1\c Scavenging Deathknell
+S|s025|OBJECTIVE||||380|1||Complete objective 1\c Night Web's Hollow
+S|s026|OBJECTIVE||||98389|1||Complete objective 1\c A Light in the Darkness
+S|s027|OBJECTIVE||||380|2||Complete objective 2\c Night Web's Hollow
+S|s028|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
+S|s029|TURNIN||||3902|||Turn in Scavenging Deathknell
+S|s030|TURNIN||||380|||Turn in Night Web's Hollow
+S|s031|ACCEPT||||381|||Accept The Scarlet Crusade
+S|s032|TURNIN||||98389|||Turn in A Light in the Darkness
+S|s033|OBJECTIVE||||381|1||Complete objective 1\c The Scarlet Crusade
+S|s034|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
+S|s035|OBJECTIVE||||6395|1||Complete objective 1\c Marla's Last Wish
+S|s036|TURNIN||||6395|||Turn in Marla's Last Wish
+S|s037|ACCEPT||||5651|||Accept In Favor of Darkness
+S|s038|TURNIN||||381|||Turn in The Scarlet Crusade
+S|s039|ACCEPT||||382|||Accept The Red Messenger
+S|s040|OBJECTIVE||||382|1||Complete objective 1\c The Red Messenger
+S|s041|TURNIN||||382|||Turn in The Red Messenger
+S|s042|ACCEPT||||383|||Accept Vital Intelligence
+S|s043|ACCEPT||||96656|||Accept The Adventurer
+S|s044|NOTE|1420|36.13|68.74||||Grind until you are at least 1940 / 2800 XP into level 5\m then confirm.
+S|s045|ACCEPT||||8|||Accept A Rogue's Deal
+R|forever.undead.priest.06-12|Undead Priest 6-12 - Tirisfal|6|12|Horde|Scourge|PRIEST|WoW Forever Undead Priest speed route\c Brill and Tirisfal through the Undercity handoff. Quest steps are location-free by default; deliberate trainer\m travel\m grind\m and item-route points keep coordinates.
+S|s001|ACCEPT||||365|||Accept Fields of Grief
+S|s002|ACCEPT||||5481|||Accept Gordo's Task
+S|s003|TRAIN|1420|52.59|55.53||||Train Tailoring. Save Linen Cloth while leveling in case you need to craft a Lesser Magic Wand later.
+X|spellId=3908
+S|s004|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
+S|s005|ACCEPT||||86784|||Accept Sticks and Bones
+S|s006|OBJECTIVE||||86784|1||Complete objective 1\c Sticks and Bones
+S|s007|ACCEPT||||404|||Accept A Putrid Task
+S|s008|TURNIN||||86784|||Turn in Sticks and Bones
+S|s009|TURNIN||||96656|||Turn in The Adventurer
+S|s010|ACCEPT||||96607|||Accept The Great Outdoors
+S|s011|OBJECTIVE||||96607|1||At the campfire for The Great Outdoors\m type /sit and remain seated for about one minute.
+S|s012|OBJECTIVE||||96607|2||Wait at the campfire until the Camp Benefits / Boosted Rest objective completes.
+S|s013|TURNIN||||96607|||Turn in The Great Outdoors
+S|s014|ACCEPT||||96658|||Accept Camping 101\c Cooking
+S|s015|ACCEPT||||367|||Accept A New Plague
+S|s016|TURNIN||||383|||Turn in Vital Intelligence
+S|s017|ACCEPT||||427|||Accept At War With The Scarlet Crusade
+S|s018|ACCEPT||||99141|||Accept Patience
+S|s019|ACCEPT||||99134|||Accept Discipline
+S|s020|OBJECTIVE||||99134|1||Complete objective 1\c Discipline
+S|s021|TURNIN||||8|||Turn in A Rogue's Deal
+S|s022|BIND|1420|61.72|52.06||||Set your Hearthstone to Brill.
+X|bindLocation=Brill
+S|s023|TRAIN|1420|61.75|51.43||||Train Cooking
+X|spellId=2550
+S|s024|TURNIN||||96658|||Turn in Camping 101\c Cooking
+S|s025|ACCEPT||||375|||Accept The Chill of Death
+S|s026|TURNIN||||5651|||Turn in In Favor of Darkness
+S|s027|ACCEPT||||5650|||Accept Garments of Darkness
+S|s028|TRAIN|1420|61.57|52.19||||Train Smite (Rank 2)
+X|spellId=591
+S|s029|TRAIN|1420|61.57|52.19||||Train Power Word\c Shield
+X|spellId=17
+S|s030|TRAIN|1420|61.57|52.19||||Train Lesser Heal (Rank 2)
+X|spellId=2052
+S|s031|TRAIN|1420|61.77|51.56||||Train Enchanting. Together with Tailoring this provides the fallback Lesser Magic Wand path.
+X|spellId=7411
+S|s032|OBJECTIVE||||99141|2||Complete objective 2\c Patience
+S|s033|ACCEPT||||97558|||Accept Hides for the Forsaken
+S|s034|OBJECTIVE||||5650|1||Complete objective 1\c Garments of Darkness
+S|s035|OBJECTIVE||||5481|1||Complete objective 1\c Gordo's Task
+S|s036|OBJECTIVE||||367|1||Complete objective 1\c A New Plague
+S|s037|OBJECTIVE||||97558|2||Complete objective 2\c Hides for the Forsaken
+S|s038|OBJECTIVE||||404|1||Complete objective 1\c A Putrid Task
+S|s039|OBJECTIVE||||99141|3||Complete objective 3\c Patience
+S|s040|OBJECTIVE||||365|1||Complete objective 1\c Fields of Grief
+S|s041|OBJECTIVE||||427|1||Complete objective 1\c At War With The Scarlet Crusade
+S|s042|ACCEPT||||99144|||Accept Seeking Refuge
+S|s043|OBJECTIVE||||99144|1||Complete objective 1\c Seeking Refuge
+S|s044|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
+S|s045|TURNIN||||5481|||Turn in Gordo's Task
+S|s046|ACCEPT||||5482|||Accept Doom Weed
+S|s047|TURNIN||||404|||Turn in A Putrid Task
+S|s048|ACCEPT||||426|||Accept The Mills Overrun
+S|s049|OBJECTIVE||||99141|1||Complete objective 1\c Patience
+S|s050|TURNIN||||367|||Turn in A New Plague
+S|s051|TURNIN||||365|||Turn in Fields of Grief
+S|s052|ACCEPT||||368|||Accept A New Plague
+S|s053|ACCEPT||||407|||Accept Fields of Grief
+S|s054|ACCEPT||||95314|||Accept That Shadowvale Green Elixir
+S|s055|TURNIN||||427|||Turn in At War With The Scarlet Crusade
+S|s056|ACCEPT||||370|||Accept At War With The Scarlet Crusade
+S|s057|TURNIN||||99141|||Turn in Patience
+S|s058|TURNIN||||99134|||Turn in Discipline
+S|s059|ACCEPT||||374|||Accept Proof of Demise
+S|s060|ACCEPT||||398|||Accept Wanted\c Maggot Eye
+S|s061|ACCEPT||||358|||Accept Graverobbers
+S|s062|TURNIN||||99144|||Turn in Seeking Refuge
+S|s063|TURNIN||||5650|||Turn in Garments of Darkness
+S|s064|TRAIN|1420|61.57|52.19||||Train Renew
+X|spellId=139
+S|s065|OBJECTIVE||||5482|1||Complete objective 1\c Doom Weed
+S|s066|OBJECTIVE||||358|1||Complete objective 1\c Graverobbers
+S|s067|OBJECTIVE||||358|3||Complete objective 3\c Graverobbers
+S|s068|OBJECTIVE||||358|2||Complete objective 2\c Graverobbers
+S|s069|OBJECTIVE||||398|1||Complete objective 1\c Wanted\c Maggot Eye
+S|s070|OBJECTIVE||||368|1||Complete objective 1\c A New Plague
+S|s071|OBJECTIVE||||97558|3||Complete objective 3\c Hides for the Forsaken
+S|s072|OBJECTIVE||||375|1||Complete objective 1\c The Chill of Death
+S|s073|OBJECTIVE||||97558|1||Complete objective 1\c Hides for the Forsaken
+S|s074|NOTE|||||||If your Hearthstone is ready\m hearth to Brill. Otherwise run back to Brill\m then confirm.
+S|s075|ACCEPT||||354|||Accept Deaths in the Family
+S|s076|ACCEPT||||362|||Accept The Haunted Mills
+S|s077|OBJECTIVE||||375|2||Complete objective 2\c The Chill of Death
+S|s078|TURNIN||||398|||Turn in Wanted\c Maggot Eye
+S|s079|TURNIN||||358|||Turn in Graverobbers
+S|s080|ACCEPT||||359|||Accept Forsaken Duties
+S|s081|TURNIN||||375|||Turn in The Chill of Death
+S|s082|TURNIN||||97558|||Turn in Hides for the Forsaken
+S|s083|TURNIN||||359|||Turn in Forsaken Duties
+S|s084|ACCEPT||||360|||Accept Return to the Magistrate
+S|s085|ACCEPT||||356|||Accept Rear Guard Patrol
+S|s086|TURNIN||||368|||Turn in A New Plague
+S|s087|ACCEPT||||369|||Accept A New Plague
+S|s088|TURNIN||||5482|||Turn in Doom Weed
+S|s089|ACCEPT||||99142|||Accept Tomb Weed
+S|s090|ACCEPT||||361|||Accept A Letter Undelivered
+S|s091|OBJECTIVE||||426|1||Complete objective 1\c The Mills Overrun
+S|s092|OBJECTIVE||||426|2||Complete objective 2\c The Mills Overrun
+S|s093|OBJECTIVE||||362|1||Complete objective 1\c The Haunted Mills
+S|s094|OBJECTIVE||||354|2||Complete objective 2\c Deaths in the Family
+S|s095|OBJECTIVE||||354|3||Complete objective 3\c Deaths in the Family
+S|s096|OBJECTIVE||||354|1||Complete objective 1\c Deaths in the Family
+S|s097|NOTE|1420|46.03|30.25||||XP check\c if A Letter to Yvette has NOT dropped\m grind to 4320 / 6500 XP into level 9. If you already have the letter\m 3360 / 6500 is enough. Confirm when the correct threshold is met.
+S|s098|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
+S|s099|TURNIN||||426|||Turn in The Mills Overrun
+S|s100|TURNIN||||361|||Turn in A Letter Undelivered
+S|s101|TURNIN||||354|||Turn in Deaths in the Family
+S|s102|TURNIN||||362|||Turn in The Haunted Mills
+S|s103|ACCEPT||||355|||Accept Speak with Sevren
+S|s104|TURNIN||||360|||Turn in Return to the Magistrate
+S|s105|TURNIN||||355|||Turn in Speak with Sevren
+S|s106|TRAINER|1420|61.57|52.19||||Visit Dark Cleric Beryl and train your level 10 Priest spells.
+S|s107|ACCEPT||||96895|||Accept The Argent Emissary
+S|s108|OBJECTIVE||||370|1||Complete objective 1\c At War With The Scarlet Crusade
+S|s109|OBJECTIVE||||370|2||Complete objective 2\c At War With The Scarlet Crusade
+S|s110|OBJECTIVE||||370|3||Complete objective 3\c At War With The Scarlet Crusade
+S|s111|OBJECTIVE||||374|1||Complete objective 1\c Proof of Demise
+S|s112|TURNIN||||374|||Turn in Proof of Demise
+S|s113|TURNIN||||370|||Turn in At War With The Scarlet Crusade
+S|s114|ACCEPT||||371|||Accept At War With The Scarlet Crusade
+S|s115|TURNIN||||96895|||Turn in The Argent Emissary
+S|s116|ACCEPT||||96897|||Accept The Cult of the Damned
+S|s117|ACCEPT||||96898|||Accept Remnants of War
+S|s118|OBJECTIVE||||96897|2||Complete objective 2\c The Cult of the Damned
+S|s119|OBJECTIVE||||96897|1||Complete objective 1\c The Cult of the Damned
+S|s120|OBJECTIVE||||96898|1||Complete objective 1\c Remnants of War
+S|s121|TURNIN||||96897|||Turn in The Cult of the Damned
+S|s122|TURNIN||||96898|||Turn in Remnants of War
+S|s123|ACCEPT||||96899|||Accept Bandarion Keep
+S|s124|OBJECTIVE||||99142|1||Complete objective 1\c Tomb Weed
+S|s125|OBJECTIVE||||356|1||Complete objective 1\c Rear Guard Patrol
+S|s126|OBJECTIVE||||356|2||Complete objective 2\c Rear Guard Patrol
+S|s127|OBJECTIVE||||371|2||Complete objective 2\c At War With The Scarlet Crusade
+S|s128|OBJECTIVE||||371|1||Complete objective 1\c At War With The Scarlet Crusade
+S|s129|OBJECTIVE||||369|1||Complete objective 1\c A New Plague
+S|s130|TURNIN||||369|||Turn in A New Plague
+S|s131|ACCEPT||||492|||Accept A New Plague
+S|s132|ACCEPT||||445|||Accept Delivery to Silverpine Forest
+S|s133|TURNIN||||371|||Turn in At War With The Scarlet Crusade
+S|s134|TURNIN||||407|||Turn in Fields of Grief
+S|s135|TURNIN||||492|||Turn in A New Plague
+S|s136|TRAINER|1420|61.57|52.19||||Visit Dark Cleric Beryl and train your level 12 Priest spells.
+S|s137|TURNIN||||99142|||Turn in Tomb Weed
+S|s138|NOTE|1420|61.57|52.19||||Bandarion Keep check\c if you are already level 12\m confirm this step and QuestMaster will skip the optional Bandarion/Shadowvale detour. At level 11 or below\m continue into the detour.
+B|s155|level:min=12
+S|s139|TURNIN||||96899|||Turn in Bandarion Keep
+S|s140|ACCEPT||||96896|||Accept A Righteous Cause
+S|s141|TURNIN||||96896|||Turn in A Righteous Cause
+S|s142|ACCEPT||||98545|||Accept Leonid's Letter
+S|s143|ACCEPT||||99152|||Accept As Above\m So Below
+S|s144|ACCEPT||||99153|||Accept The One That Got Away
+S|s145|OBJECTIVE||||99152|1||Complete objective 1\c As Above\m So Below
+S|s146|OBJECTIVE||||95314|1||Complete objective 1\c That Shadowvale Green Elixir
+S|s147|COLLECT|1420|8.52|60.09|||1|Optional\c kill the Whispering Horror elite and loot Whispering Horror Residue. Skip this if you cannot kill or group for it.
+X|count=1,itemId=268812
+S|s148|ACCEPT||||95328||1|Accept Whispering Horror Residue
+S|s149|OBJECTIVE||||99153|1||Complete objective 1\c The One That Got Away
+S|s150|DEATHSKIP|||||||Speed route\c die and resurrect at the Spirit Healer to save travel time
+S|s151|TURNIN||||99152|||Turn in As Above\m So Below
+S|s152|TURNIN||||99153|||Turn in The One That Got Away
+S|s153|NOTE|||||||If your Hearthstone is ready\m hearth to Brill. Otherwise run back to Brill\m then confirm.
+S|s154|TURNIN||||95314|||Turn in That Shadowvale Green Elixir
+S|s155|TURNIN||||356|||Turn in Rear Guard Patrol
+S|s156|TRAVEL|1420|61.8|65.06||||Enter Undercity.
+S|s157|BIND|1458|67.74|37.96||||Set your Hearthstone to Undercity at Innkeeper Norman.
+X|bindLocation=Undercity
+S|s158|TURNIN||||98545|||Turn in Leonid's Letter
+S|s159|TURNIN||||95328||1|Turn in Whispering Horror Residue
+S|s160|COLLECT|1458|64.2|49.6|||1|Fast option\c buy a Lesser Magic Wand from the Auction House if one is available at a reasonable price. Skip if you are crafting it instead.
+X|count=1,itemId=11287
+S|s161|NOTE|1458|64.2|49.6||||Wand check\c if you now have or already equipped a Lesser Magic Wand\m confirm this step and QuestMaster will skip the crafting fallback. Otherwise continue to craft one.
+B|s172|hasItem:count=1,itemId=11287
+B|s172|equipped:itemId=11287
+S|s162|TURNIN||||5658||1|Optional\c turn in Touch of Weakness if it is in your quest log.
+S|s163|TRAIN|1458|48.98|18.33|||1|Optional\c train Touch of Weakness if you still need it.
+X|spellId=2652
+S|s164|COLLECT|1458|70.76|30.67||||Wand fallback\c convert or acquire enough Linen Cloth to have 30 Bolt of Linen Cloth.
+X|count=30,itemId=2996
+S|s165|TRAIN|1458|70.06|29.84||||Wand fallback\c train Brown Linen Robe from Victor Ward.
+X|spellId=7623
+S|s166|COLLECT|1458|70.57|30.17||||Wand fallback\c buy 30 Coarse Thread from Millie Gregorian.
+X|count=30,itemId=2320
+S|s167|COLLECT|||||||Wand fallback\c craft 9 Brown Linen Robes.
+X|count=9,itemId=6238
+S|s168|COLLECT|1458|62.35|60.99||||Wand fallback\c make/acquire a Runed Copper Rod.
+X|count=1,itemId=6218
+S|s169|COLLECT|1458|62.35|60.99||||Wand fallback\c buy Simple Wood from Thaddeus Webb.
+X|count=1,itemId=4470
+S|s170|TRAIN|1458|62.54|60.34||||Wand fallback\c train Lesser Magic Wand from Malcomb Wynn.
+X|spellId=14293
+S|s171|COLLECT|||||||Wand fallback\c create a Lesser Magic Wand.
+X|count=1,itemId=11287
+S|s172|EQUIP||||||1|Equip the Lesser Magic Wand.
+X|itemId=11287
+END|c016ac54

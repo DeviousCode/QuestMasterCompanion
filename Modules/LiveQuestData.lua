@@ -5,55 +5,58 @@ local U = QMC.Util
 QMC.Live = QMC.Live or {}
 local Live = QMC.Live
 
+local function PlainNumber(value)
+    if issecretvalue and issecretvalue(value) then return nil end
+    local ok, valueType = pcall(type, value)
+    if not ok or valueType ~= "number" then return nil end
+    return value
+end
+
+local function PlainCoord(value)
+    value = PlainNumber(value)
+    if not value or value <= 0 or value >= 1 then return nil end
+    return value
+end
+
 function Live.QuestTitle(QM, questId)
     local active = QM and QM.activeQuests and QM.activeQuests[questId]
-    if active and active.title and active.title ~= "" then
-        return active.title
-    end
+    if active and active.title and active.title ~= "" then return active.title end
 
     if C_QuestLog and C_QuestLog.GetTitleForQuestID then
         local ok, title = pcall(C_QuestLog.GetTitleForQuestID, questId)
-        if ok and type(title) == "string" and title ~= "" then
-            return title
-        end
+        if ok and type(title) == "string" and title ~= "" then return title end
     end
-
     return "Quest " .. tostring(questId)
 end
 
-function Live.SafeBundledQuest(QM, questId)
-    if not (QM and QM.DB and type(QM.DB.GetQuest) == "function") then
-        return nil, false
+function Live.CurrentObjectiveIndex(QM, questId, activeQuest)
+    activeQuest = activeQuest or (QM and QM.activeQuests and QM.activeQuests[questId])
+    for index, objective in ipairs((activeQuest and activeQuest.objectives) or {}) do
+        if not objective.finished then return index end
     end
-
-    local ok, quest = pcall(QM.DB.GetQuest, QM.DB, questId)
-    if not ok then return nil, false end
-    return quest, true
+    return 1
 end
 
-function Live.SafeDiscoveryObjectives(QM, questId, objectiveCount)
-    if not (QM and QM.Discovery and type(QM.Discovery.GetObjectiveLocations) == "function") then
-        return nil, false
-    end
+function Live.GetQuestUiMapSafe(questId)
+    if type(GetQuestUiMapID) ~= "function" then return nil end
 
-    local ok, result = pcall(QM.Discovery.GetObjectiveLocations, QM.Discovery, questId, objectiveCount or 1)
-    if not ok then return nil, false end
-    return result, true
+    local ok, mapId = pcall(GetQuestUiMapID, questId, true)
+    mapId = ok and PlainNumber(mapId) or nil
+    if mapId and mapId > 0 then return mapId end
+
+    ok, mapId = pcall(GetQuestUiMapID, questId, false)
+    mapId = ok and PlainNumber(mapId) or nil
+    if mapId and mapId > 0 then return mapId end
+    return nil
 end
 
--- Small note: I intentionally read entry.turnIn directly here instead
--- of calling Discovery:GetTurnInLocation(). The public getter can fall back to
--- entry.start, and that was what sent Leonid's Letter back to the pickup NPC.
-function Live.SafeStrictDiscoveryTurnIn(QM, questId)
-    if not (QM and QM.Discovery and type(QM.Discovery.GetQuest) == "function") then
-        return nil, false
+function Live.CurrentMapId()
+    if C_Map and type(C_Map.GetBestMapForUnit) == "function" then
+        local ok, mapId = pcall(C_Map.GetBestMapForUnit, "player")
+        mapId = ok and PlainNumber(mapId) or nil
+        if mapId and mapId > 0 then return mapId end
     end
-
-    local ok, entry = pcall(QM.Discovery.GetQuest, QM.Discovery, questId)
-    if not ok then return nil, false end
-    local point = entry and entry.turnIn
-    if not U.IsUsablePoint(point) then return nil, true end
-    return {x = point.x, y = point.y, mapId = point.mapId, npcId = point.npcId}, true
+    return nil
 end
 
 function Live.IsQuestReadyForTurnIn(QM, questId, activeQuest)
@@ -62,114 +65,88 @@ function Live.IsQuestReadyForTurnIn(QM, questId, activeQuest)
         local ok, ready = pcall(QM.IsQuestReady, QM, questId)
         if ok and ready then return true end
     end
-    if C_QuestLog and C_QuestLog.IsComplete then
+    if C_QuestLog and type(C_QuestLog.IsComplete) == "function" then
         local ok, ready = pcall(C_QuestLog.IsComplete, questId)
         if ok and ready then return true end
     end
     return false
 end
 
-function Live.GetQuestUiMapSafe(questId)
-    if type(GetQuestUiMapID) ~= "function" then return nil end
-
-    local ok, mapId = pcall(GetQuestUiMapID, questId, true)
-    if ok and type(mapId) == "number" and mapId > 0 then return mapId end
-
-    ok, mapId = pcall(GetQuestUiMapID, questId, false)
-    if ok and type(mapId) == "number" and mapId > 0 then return mapId end
-    return nil
-end
-
-function Live.CurrentMapId()
-    if C_Map and type(C_Map.GetBestMapForUnit) == "function" then
-        local ok, mapId = pcall(C_Map.GetBestMapForUnit, "player")
-        if ok and type(mapId) == "number" and mapId > 0 then return mapId end
+local function NextWaypoint(questId)
+    if not (C_QuestLog and type(C_QuestLog.GetNextWaypoint) == "function") then return nil end
+    local ok, mapId, x, y = pcall(C_QuestLog.GetNextWaypoint, questId)
+    if not ok then return nil end
+    mapId, x, y = PlainNumber(mapId), PlainCoord(x), PlainCoord(y)
+    if mapId and mapId > 0 and x and y then
+        return {x = x, y = y, mapId = mapId}
     end
     return nil
 end
 
--- Another little edge case i hit: during a zone swap the activeQuests table
--- can be empty for a moment even though Blizzard still has the quest in the log.
--- This only checks the live journal so we don't throw away a real player choice.
-function Live.QuestStillOnClient(questId)
-    questId = tonumber(questId)
-    if not questId or questId <= 0 then return false end
-
-    if C_QuestLog and type(C_QuestLog.IsOnQuest) == "function" then
-        local ok, value = pcall(C_QuestLog.IsOnQuest, questId)
-        if ok and value ~= nil then return value and true or false end
-    end
-
-    if C_QuestLog and type(C_QuestLog.GetLogIndexForQuestID) == "function" then
-        local ok, index = pcall(C_QuestLog.GetLogIndexForQuestID, questId)
-        if ok and type(index) == "number" and index > 0 then return true end
-    end
-
-    return false
-end
-
-function Live.ClearTurnInCache(questId)
-    if questId then
-        QMC.liveTurnInCache[questId] = nil
-    else
-        wipe(QMC.liveTurnInCache)
-    end
-end
-
-function Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
-    local cached = QMC.liveTurnInCache[questId]
-    if U.IsUsablePoint(cached) then
-        return {x = cached.x, y = cached.y, mapId = cached.mapId, npcId = cached.npcId}, true
-    end
-
-    if not Live.IsQuestReadyForTurnIn(QM, questId, activeQuest) then
-        return nil, true
-    end
-
-    if not (C_QuestLog and type(C_QuestLog.GetQuestsOnMap) == "function") then
-        return nil, false
-    end
-
-    local mapId = Live.GetQuestUiMapSafe(questId)
-    if not mapId then return nil, true end
-
+local function QuestPointOnMap(questId, mapId)
+    if not (mapId and C_QuestLog and type(C_QuestLog.GetQuestsOnMap) == "function") then return nil end
     local ok, pois = pcall(C_QuestLog.GetQuestsOnMap, mapId)
-    if not ok or type(pois) ~= "table" then return nil, false end
+    if not ok or type(pois) ~= "table" then return nil end
 
     for _, poi in ipairs(pois) do
         if type(poi) == "table" then
-            local id = tonumber(poi.questID or poi.questId)
-            local x, y = tonumber(poi.x), tonumber(poi.y)
+            local idOK, rawId = pcall(function() return poi.questID or poi.questId end)
+            local xOK, rawX = pcall(function() return poi.x end)
+            local yOK, rawY = pcall(function() return poi.y end)
+            local id = idOK and PlainNumber(rawId) or nil
+            local x = xOK and PlainCoord(rawX) or nil
+            local y = yOK and PlainCoord(rawY) or nil
             if id == questId and x and y then
-                local loc = {x = x, y = y, mapId = mapId}
-                QMC.liveTurnInCache[questId] = loc
-
-                -- Blizzard already knows the right place here, so I also hand the
-                -- map back to QM Discovery scan when it is available. That lets
-                -- QM keep the point instead of us owning it forever.
-                if QM and QM.Discovery and type(QM.Discovery.ScanMap) == "function" then
-                    pcall(QM.Discovery.ScanMap, QM.Discovery, mapId, true)
-                end
-
-                return {x = x, y = y, mapId = mapId}, true
+                return {x = x, y = y, mapId = mapId}
             end
         end
     end
-
-    return nil, true
+    return nil
 end
 
--- One place for both turn-in wrappers to ask the same question. A real learned
--- turnIn wins. Blizzard's live point is only useful once the quest is ready.
-function Live.SafeVerifiedTurnIn(QM, questId, activeQuest)
-    local learned, discoveryOK = Live.SafeStrictDiscoveryTurnIn(QM, questId)
-    if not discoveryOK then return nil, nil, false end
-    if U.IsUsablePoint(learned) then return learned, "learned turn-in", true end
+-- Blizzard gets first say for the objective the player is actually on right now.
+-- This does not use Discovery's start/map fallback.
+function Live.SafeLiveObjectiveLocations(QM, questId, activeQuest)
+    if not activeQuest or activeQuest.isComplete then return nil, nil end
+    if Live.IsQuestReadyForTurnIn(QM, questId, activeQuest) then return nil, nil end
 
-    local livePOI, liveOK = Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
-    if not liveOK then return nil, nil, false end
-    if U.IsUsablePoint(livePOI) then return livePOI, "Blizzard live POI", true end
-    return nil, nil, true
+    local index = Live.CurrentObjectiveIndex(QM, questId, activeQuest)
+    local point = NextWaypoint(questId)
+    if point then return {[index] = {point}}, "Blizzard waypoint" end
+
+    local maps, seen = {}, {}
+    local function AddMap(mapId)
+        mapId = PlainNumber(mapId)
+        if mapId and mapId > 0 and not seen[mapId] then
+            seen[mapId] = true
+            maps[#maps + 1] = mapId
+        end
+    end
+    AddMap(Live.CurrentMapId())
+    AddMap(Live.GetQuestUiMapSafe(questId))
+
+    for _, mapId in ipairs(maps) do
+        point = QuestPointOnMap(questId, mapId)
+        if point then return {[index] = {point}}, "Blizzard map" end
+    end
+    return nil, nil
+end
+
+function Live.MergeObjectiveLocations(primary, fallback)
+    local merged = {}
+    if type(fallback) == "table" then
+        for index, list in pairs(fallback) do merged[index] = list end
+    end
+    if type(primary) == "table" then
+        for index, list in pairs(primary) do merged[index] = list end
+    end
+    return next(merged) and merged or nil
+end
+
+function Live.FirstObjectivePoint(locations, index)
+    local list = type(locations) == "table" and locations[index]
+    local point = type(list) == "table" and list[1]
+    return U.IsUsablePoint(point) and point or nil
 end
 
 function Live.PointsAgree(a, b)
@@ -179,30 +156,68 @@ function Live.PointsAgree(a, b)
     return (dx * dx + dy * dy) <= 0.0004
 end
 
-function Live.DistanceToPointSafe(QM, loc)
-    if not (QM and U.IsUsablePoint(loc) and type(QM.GetDistanceToPoint) == "function") then
-        return math.huge
-    end
-    local ok, d = pcall(QM.GetDistanceToPoint, QM, loc.x, loc.y, loc.mapId)
-    return (ok and type(d) == "number") and d or math.huge
+function Live.ClearTurnInCache()
+    wipe(QMC.liveTurnInCache)
 end
 
--- A cached live POI is only true for that quest state. Clear it when the quest
--- is picked up, leaves the log, or gets handed in so repeatables cannot reuse an
--- old point later in the same session.
-if CreateFrame then
-    local cacheFrame = CreateFrame("Frame")
-    cacheFrame:RegisterEvent("PLAYER_ENTERING_WORLD")
-    cacheFrame:RegisterEvent("QUEST_ACCEPTED")
-    cacheFrame:RegisterEvent("QUEST_REMOVED")
-    cacheFrame:RegisterEvent("QUEST_TURNED_IN")
-    cacheFrame:SetScript("OnEvent", function(_, event)
-        if event == "PLAYER_ENTERING_WORLD" then
-            Live.ClearTurnInCache()
-        else
-            -- The table is tiny. Clearing the whole thing also avoids old-client
-            -- event argument weirdness where QUEST_ACCEPTED may pass a log index.
-            Live.ClearTurnInCache()
+-- Ready quests use Blizzard's current waypoint/map before QuestMaster's saved or
+-- bundled answer. The result is cached only for this quest state/session.
+function Live.SafeLiveTurnInPOI(QM, questId, activeQuest)
+    if not Live.IsQuestReadyForTurnIn(QM, questId, activeQuest) then return nil, nil end
+
+    local cached = QMC.liveTurnInCache[questId]
+    if U.IsUsablePoint(cached) then
+        return {x = cached.x, y = cached.y, mapId = cached.mapId}, cached.source
+    end
+
+    local point = NextWaypoint(questId)
+    local source = point and "Blizzard waypoint" or nil
+
+    if not point then
+        local maps, seen = {}, {}
+        local function AddMap(mapId)
+            mapId = PlainNumber(mapId)
+            if mapId and mapId > 0 and not seen[mapId] then
+                seen[mapId] = true
+                maps[#maps + 1] = mapId
+            end
         end
+        -- If Blizzard exposes more than one hand-in, prefer the map we're on.
+        AddMap(Live.CurrentMapId())
+        AddMap(Live.GetQuestUiMapSafe(questId))
+        for _, mapId in ipairs(maps) do
+            point = QuestPointOnMap(questId, mapId)
+            if point then
+                source = "Blizzard map"
+                break
+            end
+        end
+    end
+
+    if not point then return nil, nil end
+
+    QMC.liveTurnInCache[questId] = {
+        x = point.x, y = point.y, mapId = point.mapId, source = source,
+    }
+
+    -- Let QuestMaster learn the same map too when it can.
+	-- The Companion shouldn't have to own a Forever-only point... forever.
+	-- Get it? Forever? ...yeah. Note to self: touch grass.
+    if QM and QM.Discovery and type(QM.Discovery.ScanMap) == "function" then
+        pcall(QM.Discovery.ScanMap, QM.Discovery, point.mapId, true)
+    end
+
+    return point, source
+end
+
+-- Turn-in cache only. Objective locations stay live because progress can move them.
+if CreateFrame then
+    local frame = CreateFrame("Frame")
+    frame:RegisterEvent("PLAYER_ENTERING_WORLD")
+    frame:RegisterEvent("QUEST_ACCEPTED")
+    frame:RegisterEvent("QUEST_TURNED_IN")
+    frame:RegisterEvent("QUEST_REMOVED")
+    frame:SetScript("OnEvent", function()
+        Live.ClearTurnInCache()
     end)
 end

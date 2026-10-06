@@ -1,19 +1,22 @@
 ## Interface: 16000, 16001
 ## Title: QuestMaster Companion
-## Notes: Small compatibility fixes for QuestMaster on WoW Forever
+## Notes: Small Forever helper for QuestMaster routes and live quest locations
 ## Author: SushiCode
-## Version: 0.6.0
+## Version: 0.8.3
 ## RequiredDeps: QuestMaster
 ## SavedVariables: QuestMasterCompanionDB
 ## X-Category: Quests
 
 Core.lua
 Modules/LiveQuestData.lua
-Modules/ObjectiveFallback.lua
-Modules/TurnInFallback.lua
-Modules/TurnInDatabaseBridge.lua
-Modules/GuidePersistence.lua
-Modules/TrackerDestination.lua
-Modules/GuideAssist.lua
+Modules/ObjectivePriority.lua
+Modules/TurnInPriority.lua
+Modules/RouteImportFix.lua
+Modules/RouteRuntimeSync.lua
+Modules/RouteAcceptLocation.lua
+Modules/RouteWaypointSync.lua
+Modules/RouteEventNavigation.lua
+Modules/RouteLibraryRemove.lua
+Modules/WorldMarkerOpacity.lua
 Diagnostics.lua
 Commands.lua

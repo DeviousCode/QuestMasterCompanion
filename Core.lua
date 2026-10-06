@@ -1,44 +1,56 @@
 local addonName = ...
 
 local QMC = {
-    VERSION = "0.6.0",
+    VERSION = "0.8.3",
     ADDON_NAME = addonName,
 
     objectiveState = "loading",
-    objectiveFallbackCount = 0,
+    objectiveLiveCount = 0,
     objectiveLastQuest = nil,
+    objectiveLastSource = nil,
 
     turnInState = "loading",
-    turnInFallbackCount = 0,
-    turnInLivePOICount = 0,
+    turnInLiveCount = 0,
     turnInLastQuest = nil,
     turnInLastSource = nil,
     liveTurnInCache = {},
 
-    turnInDBState = "loading",
-    turnInDBFallbackCount = 0,
-    turnInDBLastQuest = nil,
-    turnInDBLastSource = nil,
+    routeImportState = "loading",
+    routeImportNormalizeCount = 0,
+    routeImportLastReason = nil,
 
-    guideState = "loading",
-    guideRestoreCount = 0,
-    guideBlockedAutoCount = 0,
-    guideTurnInRescueCount = 0,
-    guideLastQuest = nil,
-    guideLastRescueCount = 0,
-    guideTransientGuardCount = 0,
+    routeRuntimeState = "loading",
+    routeRuntimeAdvanceCount = 0,
+    routeRuntimeLiveAcceptCount = 0,
+    routeRuntimeLastQuest = nil,
+    routeRuntimeLastEvent = nil,
 
-    guideAssistState = "loading",
-    guideAssistRefreshCount = 0,
-    guideAssistClusterCount = 0,
-    guideAssistPulseCount = 0,
-    guideAssistLastReason = nil,
-    guideAssistLastNearbyCount = 0,
+    routeAcceptState = "loading",
+    routeAcceptFixCount = 0,
+    routeAcceptLastQuest = nil,
+    routeAcceptLastSource = nil,
 
-    trackerState = "loading",
-    trackerCarryCount = 0,
-    trackerLastCarryCount = 0,
-    trackerLastMap = nil,
+    routeWaypointState = "loading",
+    routeWaypointTagCount = 0,
+    routeWaypointProtectCount = 0,
+    routeWaypointRehookCount = 0,
+    routeWaypointLastQuest = nil,
+    routeWaypointLastKind = nil,
+
+    routeEventNavState = "loading",
+    routeEventNavCount = 0,
+    routeEventNavRehookCount = 0,
+    routeEventNavLastQuest = nil,
+    routeEventNavLastKind = nil,
+
+    routeRemoveState = "loading",
+    routeRemoveCount = 0,
+    routeRemoveButtonCount = 0,
+    routeRemoveLastPackage = nil,
+
+    worldMarkerOpacityState = "loading",
+    worldMarkerOpacityApplyCount = 0,
+    worldMarkerOpacitySliderCount = 0,
 
     notifiedObjectiveQuests = {},
     notifiedTurnInQuests = {},
@@ -78,10 +90,6 @@ function U.GetAddonVersion(name)
     return "unknown"
 end
 
-function U.IsEmptyTable(value)
-    return type(value) == "table" and next(value) == nil
-end
-
 function U.IsUsableObjectiveResult(value)
     return type(value) == "table" and next(value) ~= nil
 end
@@ -97,6 +105,8 @@ function QMC:Saved()
     QuestMasterCompanionDB = QuestMasterCompanionDB or {}
     if QuestMasterCompanionDB.enabled == nil then QuestMasterCompanionDB.enabled = true end
     if QuestMasterCompanionDB.notifications == nil then QuestMasterCompanionDB.notifications = true end
+    if QuestMasterCompanionDB.worldMarkerFarAlpha == nil then QuestMasterCompanionDB.worldMarkerFarAlpha = 1.0 end
+    if QuestMasterCompanionDB.worldMarkerArrivalAlpha == nil then QuestMasterCompanionDB.worldMarkerArrivalAlpha = 1.0 end
     return QuestMasterCompanionDB
 end
 
@@ -104,19 +114,62 @@ function QMC:Notify(message)
     if self:Saved().notifications then U.Print(message) end
 end
 
+-- QuestMaster still version 2.5.0, even though the newer builds are
+-- pretty different. Check for code that only exists in the current update
+-- instead of trusting the version number.
+function QMC:HasUpdatedQuestMaster()
+    local QM = _G.QuestMaster
+    local Guide = QM and QM.Guide
+    local Engine = QM and QM.Routes and QM.Routes.Engine
+
+    if type(QM) ~= "table" then return false, "QuestMaster isn't loaded" end
+    if type(QM.GetQuestTurnInLocations) ~= "function" then return false, "unified turn-ins not found" end
+    if type(QM.ManualWaypointHolds) ~= "function" then return false, "manual waypoint support not found" end
+    if type(QM.NavigateAfterQuestEvent) ~= "function" then return false, "latest navigation update not found" end
+    if not (Guide and type(Guide.FollowPlayer) == "function" and type(Guide.PickupsFirst) == "function") then
+        return false, "latest Guide update not found"
+    end
+    if not (Engine and type(Engine.SetWaypointToCurrent) == "function" and type(Engine.CurrentStep) == "function") then
+        return false, "route engine not found"
+    end
+    return true
+end
+
 function QMC:InstallPatches()
     self.objectiveIncompatibleReason = nil
     self.turnInIncompatibleReason = nil
-    self.turnInDBIncompatibleReason = nil
-    self.guideIncompatibleReason = nil
-    self.guideAssistIncompatibleReason = nil
-    self.trackerIncompatibleReason = nil
+    self.routeImportIncompatibleReason = nil
+    self.routeRuntimeIncompatibleReason = nil
+    self.routeAcceptIncompatibleReason = nil
+    self.routeWaypointIncompatibleReason = nil
+    self.routeEventNavIncompatibleReason = nil
+    self.routeRemoveIncompatibleReason = nil
+    self.worldMarkerOpacityIncompatibleReason = nil
 
-    local a = self:InstallObjectivePatch()
-    local b = self:InstallTurnInPatch()
-    local c = self:InstallTurnInDatabaseBridge()
-    local d = self:InstallGuidePersistencePatch()
-    local e = self:InstallTrackerZonePatch()
-    local f = self:InstallGuideAssist()
-    return a or b or c or d or e or f
+    local updated, why = self:HasUpdatedQuestMaster()
+    self.upstreamReady = updated
+    self.upstreamReason = why
+    if not updated then
+        self.objectiveState = "waiting-upstream"
+        self.turnInState = "waiting-upstream"
+        self.routeImportState = "waiting-upstream"
+        self.routeRuntimeState = "waiting-upstream"
+        self.routeAcceptState = "waiting-upstream"
+        self.routeWaypointState = "waiting-upstream"
+        self.routeEventNavState = "waiting-upstream"
+        self.routeRemoveState = "waiting-upstream"
+        self.worldMarkerOpacityState = "waiting-upstream"
+        return false
+    end
+
+    local a = self:InstallObjectivePriority()
+    local b = self:InstallTurnInPriority()
+    local c = self:InstallRouteImportFix()
+    local d = self:InstallRouteRuntimeSync()
+    local e = self:InstallRouteAcceptLocation()
+    local f = self:InstallRouteWaypointSync()
+    local g = self:InstallRouteEventNavigation()
+    local h = self:InstallRouteLibraryRemove()
+    local i = self:InstallWorldMarkerOpacity()
+    return a or b or c or d or e or f or g or h or i
 end

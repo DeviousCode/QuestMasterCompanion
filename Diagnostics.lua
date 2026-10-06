@@ -4,121 +4,87 @@ if not QMC then return end
 local U = QMC.Util
 local Live = QMC.Live
 
-local function PrintPatchState(label, state, count, lastQuest, reason)
-    local suffix = ""
-    if state == "needed" then
-        suffix = " | uses: " .. tostring(count or 0)
-        if lastQuest then suffix = suffix .. " | last quest: " .. tostring(lastQuest) end
-    elseif state == "incompatible" and reason then
-        suffix = " | " .. tostring(reason)
-    end
-    U.Print(label .. ": " .. tostring(state) .. suffix)
+local function StateLine(label, state, count, lastQuest, reason)
+    local line = label .. ": " .. tostring(state)
+    if count and count > 0 then line = line .. " | uses: " .. tostring(count) end
+    if lastQuest then line = line .. " | last quest: " .. tostring(lastQuest) end
+    if reason then line = line .. " | " .. tostring(reason) end
+    U.Print(line)
 end
 
 function QMC:Status()
-    local settings = self:Saved()
     local QM = _G.QuestMaster
-    U.Print("v" .. self.VERSION .. " | QuestMaster v" .. U.GetAddonVersion("QuestMaster"))
-    U.Print("setting: " .. (settings.enabled and "on" or "off"))
+    local settings = self:Saved()
+    local updated, why = self:HasUpdatedQuestMaster()
 
-    PrintPatchState("objective patch", self.objectiveState, self.objectiveFallbackCount,
+    U.Print("v" .. self.VERSION .. " | QuestMaster v" .. U.GetAddonVersion("QuestMaster") .. " | " .. (settings.enabled and "on" or "off"))
+    U.Print("QuestMaster update: " .. (updated and "found" or ("not found - " .. tostring(why))))
+
+    StateLine("live objective", self.objectiveState, self.objectiveLiveCount,
         self.objectiveLastQuest, self.objectiveIncompatibleReason)
-    PrintPatchState("turn-in patch", self.turnInState, self.turnInFallbackCount,
+    StateLine("live turn-in", self.turnInState, self.turnInLiveCount,
         self.turnInLastQuest, self.turnInIncompatibleReason)
-    PrintPatchState("turn-in db bridge", self.turnInDBState, self.turnInDBFallbackCount,
-        self.turnInDBLastQuest, self.turnInDBIncompatibleReason)
-    PrintPatchState("guide persistence patch", self.guideState, self.guideRestoreCount,
-        self.guideLastQuest, self.guideIncompatibleReason)
-    PrintPatchState("guide pickup assist", self.guideAssistState, self.guideAssistClusterCount,
-        nil, self.guideAssistIncompatibleReason)
-    PrintPatchState("tracker destination patch", self.trackerState, self.trackerCarryCount,
-        nil, self.trackerIncompatibleReason)
+    StateLine("route import", self.routeImportState,
+        self.routeImportNormalizeCount, nil, self.routeImportIncompatibleReason)
+    StateLine("route runtime", self.routeRuntimeState,
+        self.routeRuntimeAdvanceCount, self.routeRuntimeLastQuest, self.routeRuntimeIncompatibleReason)
+    StateLine("route accept", self.routeAcceptState,
+        self.routeAcceptFixCount, self.routeAcceptLastQuest, self.routeAcceptIncompatibleReason)
+    StateLine("route waypoint", self.routeWaypointState,
+        self.routeWaypointProtectCount, self.routeWaypointLastQuest, self.routeWaypointIncompatibleReason)
+    StateLine("route event nav", self.routeEventNavState,
+        self.routeEventNavCount, self.routeEventNavLastQuest, self.routeEventNavIncompatibleReason)
+    StateLine("route remove", self.routeRemoveState,
+        self.routeRemoveCount, nil, self.routeRemoveIncompatibleReason)
+    StateLine("world marker opacity", self.worldMarkerOpacityState,
+        nil, nil, self.worldMarkerOpacityIncompatibleReason)
 
-    U.Print("guide counts: restores " .. tostring(self.guideRestoreCount or 0) ..
-        " | blocked " .. tostring(self.guideBlockedAutoCount or 0) ..
-        " | zone holds " .. tostring(self.guideTransientGuardCount or 0) ..
-        " | turn-ins added " .. tostring(self.guideTurnInRescueCount or 0))
+    if self.routeAcceptFixCount and self.routeAcceptFixCount > 0 then
+        U.Print("route accept: fixes " .. tostring(self.routeAcceptFixCount or 0)
+            .. (self.routeAcceptLastQuest and (" | last quest " .. tostring(self.routeAcceptLastQuest)) or "")
+            .. (self.routeAcceptLastSource and (" | " .. tostring(self.routeAcceptLastSource)) or ""))
+    end
 
-    U.Print("pickup assist: clustered " .. tostring(self.guideAssistClusterCount or 0) ..
-        " | refreshes " .. tostring(self.guideAssistRefreshCount or 0) ..
-        " | pulse changes " .. tostring(self.guideAssistPulseCount or 0) ..
-        (self.guideAssistLastReason and (" | last: " .. tostring(self.guideAssistLastReason)) or ""))
+    if self.routeWaypointLastQuest then
+        U.Print("route waypoint: tags " .. tostring(self.routeWaypointTagCount or 0)
+            .. " | protects " .. tostring(self.routeWaypointProtectCount or 0)
+            .. " | rehooks " .. tostring(self.routeWaypointRehookCount or 0)
+            .. " | last: " .. tostring(self.routeWaypointLastKind or "step")
+            .. " quest " .. tostring(self.routeWaypointLastQuest))
+    end
 
-    if self.trackerLastMap then
-        U.Print("tracker: map " .. tostring(self.trackerLastMap) ..
-            " | added " .. tostring(self.trackerLastCarryCount or 0))
+    if self.routeEventNavCount and self.routeEventNavCount > 0 then
+        U.Print("route event nav: redirects " .. tostring(self.routeEventNavCount or 0)
+            .. " | rehooks " .. tostring(self.routeEventNavRehookCount or 0)
+            .. " | last: " .. tostring(self.routeEventNavLastKind or "step")
+            .. (self.routeEventNavLastQuest and (" quest " .. tostring(self.routeEventNavLastQuest)) or ""))
     end
-    if self.turnInLastSource then
-        U.Print("turn-in source: " .. tostring(self.turnInLastSource) ..
-            " | Blizzard map uses " .. tostring(self.turnInLivePOICount or 0))
+
+    if self.routeRemoveButtonCount and self.routeRemoveButtonCount > 0 then
+        U.Print("route remove: X buttons " .. tostring(self.routeRemoveButtonCount or 0)
+            .. (self.routeRemoveLastPackage and (" | last: " .. tostring(self.routeRemoveLastPackage)) or ""))
     end
-    if self.turnInDBLastSource then
-        U.Print("turn-in db source: " .. tostring(self.turnInDBLastSource))
+
+    if self.routeRuntimeLastEvent then
+        U.Print("route runtime: event fixes " .. tostring(self.routeRuntimeAdvanceCount or 0)
+            .. " | live accepts " .. tostring(self.routeRuntimeLiveAcceptCount or 0)
+            .. " | last: " .. tostring(self.routeRuntimeLastEvent))
     end
+
+    if self.objectiveLastSource then U.Print("last objective source: " .. tostring(self.objectiveLastSource)) end
+    if self.turnInLastSource then U.Print("last turn-in source: " .. tostring(self.turnInLastSource)) end
 
     if QM then
-        if self.objectiveWrapper and QM.GetQuestObjectiveLocationsFixed == self.objectiveWrapper then
-            U.Print("objective hook: companion")
-        elseif self.objectiveOriginal and QM.GetQuestObjectiveLocationsFixed == self.objectiveOriginal then
-            U.Print("objective hook: QuestMaster")
-        else
-            U.Print("objective hook: changed")
-        end
-
-        if self.turnInWrapper and QM.GetQuestTurnInLocation == self.turnInWrapper then
-            U.Print("turn-in hook: companion")
-        elseif self.turnInOriginal and QM.GetQuestTurnInLocation == self.turnInOriginal then
-            U.Print("turn-in hook: QuestMaster")
-        else
-            U.Print("turn-in hook: changed")
-        end
-
-        local DB = QM.DB
-        if DB and self.turnInDBWrapper and DB.GetQuestTurnInLocations == self.turnInDBWrapper then
-            U.Print("turn-in db hook: companion")
-        elseif DB and self.turnInDBOriginal and DB.GetQuestTurnInLocations == self.turnInDBOriginal then
-            U.Print("turn-in db hook: QuestMaster")
-        else
-            U.Print("turn-in db hook: changed")
-        end
-
-        local Guide = QM.Guide
-        local persistenceUnderAssist = Guide and self.guideAssistRebuildWrapper
-            and Guide.Rebuild == self.guideAssistRebuildWrapper
-            and self.guideAssistRebuildOriginal == self.guideRebuildWrapper
-        if Guide and self.guideRebuildWrapper and self.guideWaypointWrapper and self.guideAutoSelectWrapper
-            and (Guide.Rebuild == self.guideRebuildWrapper or persistenceUnderAssist)
-            and Guide.SetWaypointToCurrent == self.guideWaypointWrapper
-            and QM.AutoSelectBestWaypoint == self.guideAutoSelectWrapper then
-            U.Print("guide persistence hook: companion")
-        elseif Guide and self.guideRebuildOriginal and self.guideWaypointOriginal and self.guideAutoSelectOriginal
-            and Guide.Rebuild == self.guideRebuildOriginal
-            and Guide.SetWaypointToCurrent == self.guideWaypointOriginal
-            and QM.AutoSelectBestWaypoint == self.guideAutoSelectOriginal then
-            U.Print("guide persistence hook: QuestMaster")
-        else
-            U.Print("guide persistence hook: changed")
-        end
-
-        if Guide and self.guideAssistRebuildWrapper and Guide.Rebuild == self.guideAssistRebuildWrapper then
-            U.Print("guide pickup hook: companion")
-        elseif Guide and self.guideAssistRebuildOriginal and Guide.Rebuild == self.guideAssistRebuildOriginal then
-            U.Print("guide pickup hook: QuestMaster/inner")
-        else
-            U.Print("guide pickup hook: changed")
-        end
-
-        if self.trackerCompletedWrapper and self.trackerIncompleteWrapper
-            and QM.GetCompletedQuests == self.trackerCompletedWrapper
-            and QM.GetIncompleteQuests == self.trackerIncompleteWrapper then
-            U.Print("tracker hook: companion")
-        elseif self.trackerCompletedOriginal and self.trackerIncompleteOriginal
-            and QM.GetCompletedQuests == self.trackerCompletedOriginal
-            and QM.GetIncompleteQuests == self.trackerIncompleteOriginal then
-            U.Print("tracker hook: QuestMaster")
-        else
-            U.Print("tracker hook: changed")
-        end
+        local Engine = QM.Routes and QM.Routes.Engine
+        U.Print("hooks: objective " .. ((self.objectiveWrapper and QM.GetQuestObjectiveLocationsFixed == self.objectiveWrapper) and "companion" or "QuestMaster")
+            .. " | turn-in " .. ((self.turnInWrapper and QM.GetQuestTurnInLocation == self.turnInWrapper) and "companion" or "QuestMaster")
+            .. " | route import " .. ((QM.Routes and QM.Routes.Codec and self.routeImportWrapper and QM.Routes.Codec.Decode == self.routeImportWrapper) and "companion" or "QuestMaster")
+            .. " | route runtime " .. ((Engine and Engine.Eval and self.routeRuntimeWrapper and Engine.Eval.EvalQuestInLog == self.routeRuntimeWrapper) and "companion" or "QuestMaster")
+            .. " | route accept " .. ((Engine and self.routeAcceptWrapper and Engine.SetWaypointToCurrent == self.routeWaypointSetWrapper and self.routeAcceptInstalledUnderWaypoint) and "companion" or ((Engine and self.routeAcceptWrapper and Engine.SetWaypointToCurrent == self.routeAcceptWrapper) and "companion" or "QuestMaster"))
+            .. " | route waypoint " .. ((Engine and self.routeWaypointSetWrapper and Engine.SetWaypointToCurrent == self.routeWaypointSetWrapper and self.routeWaypointHoldWrapper and QM.ManualWaypointHolds == self.routeWaypointHoldWrapper) and "companion" or "QuestMaster")
+            .. " | route event nav " .. ((self.routeEventNavWrapper and QM.NavigateAfterQuestEvent == self.routeEventNavWrapper) and "companion" or "QuestMaster")
+            .. " | route remove " .. ((self.routeRemoveWrapper and QM.CreateRoutesTab == self.routeRemoveWrapper) and "companion" or "QuestMaster")
+            .. " | marker opacity " .. ((self.worldMarkerUpdateWrapper and QM.WorldMarker and QM.WorldMarker.UpdateMarker == self.worldMarkerUpdateWrapper and self.worldMarkerOptionsWrapper and QM.CreateArrowTab == self.worldMarkerOptionsWrapper) and "companion" or "QuestMaster"))
     end
 end
 
@@ -136,71 +102,40 @@ function QMC:TestQuest(questId)
     end
 
     local active = QM.activeQuests and QM.activeQuests[questId]
-    local bundled = nil
-    if QM.DB and type(QM.DB.GetQuest) == "function" then
-        bundled = select(1, Live.SafeBundledQuest(QM, questId))
-    end
-
-    local count = active and active.objectives and #active.objectives or 1
-    if count < 1 then count = 1 end
-
-    local learnedObjectives = select(1, Live.SafeDiscoveryObjectives(QM, questId, count))
-    local learnedTurnIn = select(1, Live.SafeStrictDiscoveryTurnIn(QM, questId))
-    local liveTurnIn = select(1, Live.SafeLiveTurnInPOI(QM, questId, active))
-
     local objectiveOriginal = self.objectiveOriginal or QM.GetQuestObjectiveLocationsFixed
     local turnInOriginal = self.turnInOriginal or QM.GetQuestTurnInLocation
-    local dbTurnInOriginal = self.turnInDBOriginal or (QM.DB and QM.DB.GetQuestTurnInLocations)
 
-    local originalObjectives
+    local qmObjectives
     if type(objectiveOriginal) == "function" then
         local ok, value = pcall(objectiveOriginal, QM, questId)
-        if ok then originalObjectives = value end
+        if ok then qmObjectives = value end
     end
 
-    local originalTurnIn
+    local qmTurnIn
     if type(turnInOriginal) == "function" then
         local ok, value = pcall(turnInOriginal, QM, questId)
-        if ok then originalTurnIn = value end
+        if ok then qmTurnIn = value end
     end
 
-    local originalDBTurnIn
-    if QM.DB and type(dbTurnInOriginal) == "function" then
-        local ok, value = pcall(dbTurnInOriginal, QM.DB, questId)
-        if ok then originalDBTurnIn = value end
+    local liveObjectives, liveObjectiveSource = Live.SafeLiveObjectiveLocations(QM, questId, active)
+    local liveTurnIn, liveTurnInSource = Live.SafeLiveTurnInPOI(QM, questId, active)
+
+    U.Print("testing " .. Live.QuestTitle(QM, questId) .. " [" .. questId .. "] | active " .. (active and "yes" or "no"))
+    U.Print("objective | Blizzard " .. (U.IsUsableObjectiveResult(liveObjectives) and ("yes - " .. tostring(liveObjectiveSource)) or "none")
+        .. " | QuestMaster " .. (U.IsUsableObjectiveResult(qmObjectives) and "yes" or "none"))
+    U.Print("turn-in   | Blizzard " .. (U.IsUsablePoint(liveTurnIn) and ("yes - " .. tostring(liveTurnInSource)) or "none")
+        .. " | QuestMaster " .. (U.IsUsablePoint(qmTurnIn) and "yes" or "none"))
+
+    local entry
+    if QM.Discovery and type(QM.Discovery.GetQuest) == "function" then
+        local ok, value = pcall(QM.Discovery.GetQuest, QM.Discovery, questId)
+        if ok then entry = value end
     end
-
-    U.Print("testing " .. Live.QuestTitle(QM, questId) .. " [" .. questId .. "]")
-    U.Print("active " .. (active and "yes" or "no") .. " | bundled " .. (bundled and "yes" or "no"))
-    U.Print("objective | QM " ..
-        (U.IsUsableObjectiveResult(originalObjectives) and "usable" or (U.IsEmptyTable(originalObjectives) and "empty table" or "nil/other")) ..
-        " | learned " .. (U.IsUsableObjectiveResult(learnedObjectives) and "usable" or "none"))
-    U.Print("turn-in   | QM " .. (U.IsUsablePoint(originalTurnIn) and "usable" or "none") ..
-        " | raw DB " .. (type(originalDBTurnIn) == "table" and originalDBTurnIn[1] and "usable" or "none") ..
-        " | learned " .. (U.IsUsablePoint(learnedTurnIn) and "usable" or "none") ..
-        " | live POI: " .. (U.IsUsablePoint(liveTurnIn) and ("usable map " .. tostring(liveTurnIn.mapId)) or "none"))
-
-    if active and not bundled and U.IsUsableObjectiveResult(learnedObjectives)
-        and (originalObjectives == nil or U.IsEmptyTable(originalObjectives)) then
-        U.Print("objective: fallback needed")
-    elseif active and not bundled and U.IsUsableObjectiveResult(learnedObjectives)
-        and U.IsUsableObjectiveResult(originalObjectives) then
-        U.Print("objective: QuestMaster already handles this quest")
-    end
-
-    local verified = U.IsUsablePoint(learnedTurnIn) and learnedTurnIn or liveTurnIn
-    if active and not bundled and U.IsUsablePoint(verified) then
-        if U.IsUsablePoint(originalTurnIn) and Live.PointsAgree(originalTurnIn, verified) then
-            U.Print("turn-in: QuestMaster public resolver matches")
-        elseif U.IsUsablePoint(learnedTurnIn) then
-            U.Print("turn-in: using learned location")
-        else
-            U.Print("turn-in: using Blizzard map")
-        end
-        if not (type(originalDBTurnIn) == "table" and originalDBTurnIn[1]) then
-            U.Print("turn-in db: bridge needed for raw QuestMaster readers")
-        end
-    elseif active and not bundled and Live.IsQuestReadyForTurnIn(QM, questId, active) then
-        U.Print("turn-in: ready, no location found")
+    if type(entry) == "table" then
+        local index = Live.CurrentObjectiveIndex(QM, questId, active)
+        local learned = entry.objectivePoints and entry.objectivePoints[index]
+        U.Print("Discovery | objective " .. (U.IsUsablePoint(learned) and "yes" or "no")
+            .. " | map fallback " .. (U.IsUsablePoint(entry.mapPoint) and "yes" or "no")
+            .. " | pickup/start " .. (U.IsUsablePoint(entry.start) and "yes" or "no"))
     end
 end
