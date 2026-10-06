@@ -1,5 +1,19 @@
 # Changelog
 
+## 0.10.0 — 2026-10-06
+
+- Promoted QuestMaster Companion itself out of the experimental release line. World Object Assist remains an **Experimental controls** section under QuestMaster **Advanced -> Debug Tools**, but the feature now ships enabled by default.
+- Added World Object Assist as a fully Companion-owned module. It enables WoW's Interact Key scanner, hides Blizzard's generic interact icons by default, and leaves real quest `!` / `?` markers alone. Disabling the QMC feature restores the player's previous Interact Key/icon settings.
+- Rebuilt the object marker through the 0.9.7-0.9.10 test cycle: stopped editing Blizzard's pooled nameplate icon, moved to QMC-owned graphics, removed the permanent square backplate, switched to Blizzard's clean `QuestNormal` atlas, and replaced the old breathing block with a same-shape radiating echo.
+- Added the green quest-object marker controls: icon size/color, opacity, echo strength, radiating pulse + speed, optional twinkles, and common-object filtering.
+- Added automatic marker positioning above the object name so large icons/echoes do not cover the label, plus live **Vertical offset** and **Horizontal offset** sliders for manual tuning.
+- Added a simple **Detection range** control with only **10 yd** and **20 yd** choices, defaulting to **20 yd**. QMC applies the secure `SoftTargetInteractRange` CVar with `SetCVar` while World Object Assist is active and restores the player's previous value when the feature is disabled. The 20 yd option is the practical ceiling found during live Equipment Boxes testing.
+- Added controller compatibility to World Object Assist. By default the feature suspends itself when gamepad input becomes active, restores Blizzard's normal controller Interact Key/icon/range behavior, and automatically resumes the QMC marker when keyboard/mouse becomes active again. The Advanced toggle can disable this behavior for testing.
+- Expanded quest relevance beyond the active quest log. The Companion now recognizes direct quest-start objects, quest turn-in objects, GameObject objectives, item objectives gathered from GameObjects, item-started/reverse quests, required quest-item sources, and QuestMaster item-to-quest relationships.
+- Kept the denylist-first behavior for incomplete object coverage: known quest relationships always qualify unless explicitly ignored, common utility objects can be skipped, and unknown GameObjects still highlight by default so new Forever quest objects are not silently missed. `/qmc object debug` now reports why an object qualified.
+- Added per-object `/qmc object ignore`, `allow`, and `clear` overrides. Explicit saved overrides beat automatic quest classification.
+- Hardened marker lifecycle around recycled nameplates and soft-target changes with GUID checks and short reacquire retries, avoiding the old random oversized/red icon carry-over seen during live testing.
+
 ## 0.9.5 — 2026-10-06
 
 - Added the guide-task experiment as one bigger Companion layer. Routes can now carry Companion-only lines like `QMC|GROUP`, `QMC|BACKGROUND`, `QMC|KILL`, `QMC|XP`, and `QMC|TIP`; the Companion reads those first, then hands QuestMaster a normal QMROUTE like usual.

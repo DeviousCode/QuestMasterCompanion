@@ -1,7 +1,7 @@
 local addonName = ...
 
 local QMC = {
-    VERSION = "0.9.5",
+    VERSION = "0.10.0",
     ADDON_NAME = addonName,
 
     objectiveState = "loading",
@@ -65,6 +65,13 @@ local QMC = {
     worldMarkerOpacityApplyCount = 0,
     worldMarkerOpacitySliderCount = 0,
 
+    worldObjectAssistState = "loading",
+    worldObjectAssistShowCount = 0,
+    worldObjectAssistBlockCount = 0,
+    worldObjectAssistLastName = nil,
+    worldObjectAssistLastId = nil,
+    worldObjectAssistLastReason = nil,
+
     notifiedObjectiveQuests = {},
     notifiedTurnInQuests = {},
 }
@@ -120,6 +127,38 @@ function QMC:Saved()
     if QuestMasterCompanionDB.notifications == nil then QuestMasterCompanionDB.notifications = true end
     if QuestMasterCompanionDB.worldMarkerFarAlpha == nil then QuestMasterCompanionDB.worldMarkerFarAlpha = 1.0 end
     if QuestMasterCompanionDB.worldMarkerArrivalAlpha == nil then QuestMasterCompanionDB.worldMarkerArrivalAlpha = 1.0 end
+    if QuestMasterCompanionDB.worldObjectAssistEnabled == nil then QuestMasterCompanionDB.worldObjectAssistEnabled = true end
+    if QuestMasterCompanionDB.worldObjectAssistVisualVersion == nil or QuestMasterCompanionDB.worldObjectAssistVisualVersion < 4 then
+        -- 0.9.10 replaces the square glow/breathe prototype with an atlas-backed
+        -- quest icon and same-shape radiating echo. Reset only appearance values;
+        -- filtering overrides and enable state remain intact.
+        QuestMasterCompanionDB.worldObjectAssistSize = 48
+        QuestMasterCompanionDB.worldObjectAssistOpacity = 0.97
+        QuestMasterCompanionDB.worldObjectAssistColor = "green"
+        QuestMasterCompanionDB.worldObjectAssistGlowStrength = 0.64
+        QuestMasterCompanionDB.worldObjectAssistPulse = true
+        QuestMasterCompanionDB.worldObjectAssistPulseSpeed = 0.90
+        QuestMasterCompanionDB.worldObjectAssistSparkles = false
+        QuestMasterCompanionDB.worldObjectAssistSparkleStrength = 0.50
+        QuestMasterCompanionDB.worldObjectAssistVisualVersion = 4
+    end
+    if QuestMasterCompanionDB.worldObjectAssistSize == nil then QuestMasterCompanionDB.worldObjectAssistSize = 54 end
+    if QuestMasterCompanionDB.worldObjectAssistOpacity == nil then QuestMasterCompanionDB.worldObjectAssistOpacity = 0.96 end
+    if QuestMasterCompanionDB.worldObjectAssistColor == nil then QuestMasterCompanionDB.worldObjectAssistColor = "green" end
+    if QuestMasterCompanionDB.worldObjectAssistGlowStrength == nil then QuestMasterCompanionDB.worldObjectAssistGlowStrength = 0.72 end
+    if QuestMasterCompanionDB.worldObjectAssistPulse == nil then QuestMasterCompanionDB.worldObjectAssistPulse = true end
+    if QuestMasterCompanionDB.worldObjectAssistPulseSpeed == nil then QuestMasterCompanionDB.worldObjectAssistPulseSpeed = 1.00 end
+    if QuestMasterCompanionDB.worldObjectAssistSparkles == nil then QuestMasterCompanionDB.worldObjectAssistSparkles = false end
+    if QuestMasterCompanionDB.worldObjectAssistSparkleStrength == nil then QuestMasterCompanionDB.worldObjectAssistSparkleStrength = 0.55 end
+    if QuestMasterCompanionDB.worldObjectAssistHideBlizzardIcons == nil then QuestMasterCompanionDB.worldObjectAssistHideBlizzardIcons = true end
+    if QuestMasterCompanionDB.worldObjectAssistSuspendGamepad == nil then QuestMasterCompanionDB.worldObjectAssistSuspendGamepad = true end
+    if QuestMasterCompanionDB.worldObjectAssistRange ~= 10 and QuestMasterCompanionDB.worldObjectAssistRange ~= 20 then QuestMasterCompanionDB.worldObjectAssistRange = 20 end
+    if QuestMasterCompanionDB.worldObjectAssistBlockCommon == nil then QuestMasterCompanionDB.worldObjectAssistBlockCommon = true end
+    if QuestMasterCompanionDB.worldObjectAssistAutoPosition == nil then QuestMasterCompanionDB.worldObjectAssistAutoPosition = true end
+    if QuestMasterCompanionDB.worldObjectAssistOffsetX == nil then QuestMasterCompanionDB.worldObjectAssistOffsetX = 0 end
+    if QuestMasterCompanionDB.worldObjectAssistOffsetY == nil then QuestMasterCompanionDB.worldObjectAssistOffsetY = 0 end
+    QuestMasterCompanionDB.worldObjectAssistIgnoreIds = QuestMasterCompanionDB.worldObjectAssistIgnoreIds or {}
+    QuestMasterCompanionDB.worldObjectAssistAllowIds = QuestMasterCompanionDB.worldObjectAssistAllowIds or {}
     QuestMasterCompanionDB.routeGuideMeta = QuestMasterCompanionDB.routeGuideMeta or {}
     QuestMasterCompanionDB.routeGuideTaskProgress = QuestMasterCompanionDB.routeGuideTaskProgress or {}
     return QuestMasterCompanionDB
@@ -161,6 +200,7 @@ function QMC:InstallPatches()
     self.routeGuideIncompatibleReason = nil
     self.routeRemoveIncompatibleReason = nil
     self.worldMarkerOpacityIncompatibleReason = nil
+    self.worldObjectAssistIncompatibleReason = nil
 
     local updated, why = self:HasUpdatedQuestMaster()
     self.upstreamReady = updated
@@ -175,6 +215,7 @@ function QMC:InstallPatches()
         self.routeGuideState = "waiting-upstream"
         self.routeRemoveState = "waiting-upstream"
         self.worldMarkerOpacityState = "waiting-upstream"
+        self.worldObjectAssistState = "waiting-upstream"
         return self:InstallRouteImportFix()
     end
 
@@ -188,5 +229,6 @@ function QMC:InstallPatches()
     local h = self:InstallGuideTasks()
     local i = self:InstallRouteLibraryRemove()
     local j = self:InstallWorldMarkerOpacity()
-    return a or b or c or d or e or f or g or h or i or j
+    local k = self:InstallWorldObjectAssist()
+    return a or b or c or d or e or f or g or h or i or j or k
 end

@@ -2,7 +2,7 @@
 ## Title: QuestMaster Companion
 ## Notes: Companion bridge for QuestMaster routes, guide tasks, and live quest locations
 ## Author: SushiCode
-## Version: 0.9.5
+## Version: 0.10.0
 ## RequiredDeps: QuestMaster
 ## SavedVariables: QuestMasterCompanionDB
 ## X-Category: Quests
@@ -19,5 +19,6 @@ Modules/RouteWaypointSync.lua
 Modules/RouteEventNavigation.lua
 Modules/RouteLibraryRemove.lua
 Modules/WorldMarkerOpacity.lua
+Modules/WorldObjectAssist.lua
 Diagnostics.lua
 Commands.lua

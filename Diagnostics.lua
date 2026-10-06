@@ -40,6 +40,15 @@ function QMC:Status()
         self.routeRemoveCount, nil, self.routeRemoveIncompatibleReason)
     StateLine("world marker opacity", self.worldMarkerOpacityState,
         nil, nil, self.worldMarkerOpacityIncompatibleReason)
+    StateLine("world object assist", self.worldObjectAssistState,
+        self.worldObjectAssistShowCount, nil, self.worldObjectAssistIncompatibleReason)
+    if self.worldObjectAssistLastName then
+        U.Print("world object assist: shown " .. tostring(self.worldObjectAssistShowCount or 0)
+            .. " | blocked " .. tostring(self.worldObjectAssistBlockCount or 0)
+            .. " | last: " .. tostring(self.worldObjectAssistLastName)
+            .. (self.worldObjectAssistLastId and (" [" .. tostring(self.worldObjectAssistLastId) .. "]") or "")
+            .. (self.worldObjectAssistLastReason and (" | " .. tostring(self.worldObjectAssistLastReason)) or ""))
+    end
 
     if self.routeAcceptFixCount and self.routeAcceptFixCount > 0 then
         U.Print("route accept: fixes " .. tostring(self.routeAcceptFixCount or 0)
@@ -103,7 +112,8 @@ function QMC:Status()
             .. " | route event nav " .. ((self.routeEventNavWrapper and QM.NavigateAfterQuestEvent == self.routeEventNavWrapper) and "companion" or "QuestMaster")
             .. " | guide tasks " .. ((Engine and self.routeGuideAdvanceWrapper and Engine.Advance == self.routeGuideAdvanceWrapper) and "companion" or "QuestMaster")
             .. " | route remove " .. ((self.routeRemoveWrapper and QM.CreateRoutesTab == self.routeRemoveWrapper) and "companion" or "QuestMaster")
-            .. " | marker opacity " .. ((self.worldMarkerUpdateWrapper and QM.WorldMarker and QM.WorldMarker.UpdateMarker == self.worldMarkerUpdateWrapper and self.worldMarkerOptionsWrapper and QM.CreateArrowTab == self.worldMarkerOptionsWrapper) and "companion" or "QuestMaster"))
+            .. " | marker opacity " .. ((self.worldMarkerUpdateWrapper and QM.WorldMarker and QM.WorldMarker.UpdateMarker == self.worldMarkerUpdateWrapper and self.worldMarkerOptionsWrapper and QM.CreateArrowTab == self.worldMarkerOptionsWrapper) and "companion" or "QuestMaster")
+            .. " | object assist " .. ((self.worldObjectAssistOptionsWrapper and QM.CreateAdvancedTab == self.worldObjectAssistOptionsWrapper) and "companion" or "QuestMaster"))
     end
 end
 
